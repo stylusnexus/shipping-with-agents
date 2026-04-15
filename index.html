@@ -737,6 +737,29 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
 
         <p>You don't need all eight layers on day one. But understand that they're designed to stack. When you hit the ceiling of one layer, the next one is waiting.</p>
 
+        <h3>MCP Servers: Extending Agent Reach</h3>
+
+        <p>MCP (Model Context Protocol) servers package external integrations as tools that any agent can invoke. Instead of writing custom API wrappers, you connect a server and every agent in your setup can use it. The practical question isn't "should I use MCP?" but "when does MCP pay for itself vs. just calling an API directly?"</p>
+
+        <p>Our rule of thumb: <strong>if 3+ agents need access to the same external system, an MCP server pays off</strong>. If only one agent uses a service, a direct API call is simpler. MCP adds value when integrations are shared infrastructure, not one-off connections.</p>
+
+        <p>Here are the categories we've found most useful:</p>
+
+        <ul>
+          <li><strong>Documentation lookup</strong> (e.g., <a href="https://github.com/upstash/context7">context7</a>): fetches current library and framework docs so agents don't rely on stale training data. This alone prevents a whole class of "the API changed" errors.</li>
+          <li><strong>Browser automation</strong> (e.g., <a href="https://github.com/microsoft/playwright-mcp">Playwright</a>): visual testing, UI verification, and scraping. Essential for verifying frontend changes actually look right.</li>
+          <li><strong>Database management</strong> (e.g., Supabase, <a href="https://neon.tech/docs/ai/ai-tools-neon-mcp">Neon</a>, Postgres): schema inspection, query execution, and migration management. Agents can check table structure before writing queries.</li>
+          <li><strong>Deployment and infra</strong> (e.g., Render, Vercel, <a href="https://developers.cloudflare.com/agents/guides/remote-mcp-server/">Cloudflare Workers</a>, AWS, Railway): service management, logs, metrics, and environment configuration. Useful for deploy verification and incident investigation.</li>
+          <li><strong>Observability</strong> (e.g., <a href="https://docs.sentry.io/organization/integrations/integration-platform/mcp-server/">Sentry</a>, PostHog): error tracking and analytics queries. Agents can check error rates after deploys or investigate user-reported issues.</li>
+          <li><strong>Source control</strong> (e.g., <a href="https://github.com/github/github-mcp-server">GitHub</a>): PR management, issue tracking, code review, and CI check status. Probably the most universally useful MCP server.</li>
+          <li><strong>Communication</strong> (e.g., Slack): channel messages, thread search, and sending updates. Useful for agents that need to report results or check team discussions for context.</li>
+        </ul>
+
+        <div class="callout tip">
+          <strong>Start with one MCP server, not seven.</strong>
+          <p>We'd recommend context7 or GitHub as your first MCP connection. Both are universally useful regardless of your stack. Add more as you notice agents repeatedly needing access to the same external system. The full list of available servers is at <a href="https://modelcontextprotocol.io">modelcontextprotocol.io</a>.</p>
+        </div>
+
         <div class="callout">
           <strong>These patterns are product-agnostic.</strong>
           <p>We use these patterns for our production SaaS, but there's nothing domain-specific about the architecture. CLAUDE.md, guidances, hooks, agents, memory, skills, experiments. They work for any project with enough complexity to benefit from structured context. That's the point.</p>
