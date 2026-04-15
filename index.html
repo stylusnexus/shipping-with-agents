@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shipping with Agents: Advanced Claude Code Patterns from a Production Team</title>
-  <meta name="description" content="How a production SaaS team ships with 14 specialized agents, 20+ workflow skills, automated hooks, and per-agent memory systems — real patterns from building CritForge." />
+  <meta name="description" content="How a production SaaS team ships with 14 specialized agents, 20+ workflow skills, automated hooks, and per-agent memory systems. Real patterns from building CritForge." />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -54,7 +54,7 @@
         <div class="hero-badge">From a Production Team</div>
         <h1>Shipping with <span class="accent">Agents</span></h1>
         <p class="hero-subtitle">
-          14 specialized agents, 20+ workflow skills, automated context injection via hooks, and per-agent memory systems — advanced Claude Code patterns from a team that ships with them every day.
+          14 specialized agents, 20+ workflow skills, automated context injection via hooks, and per-agent memory systems. Advanced Claude Code patterns from a team that ships with them every day.
         </p>
       </div>
 
@@ -64,7 +64,7 @@
 
         <p>There's no shortage of "50 Claude Code tips" posts. They're genuinely useful if you're getting started. But they tend to stop at the surface: write a good CLAUDE.md, use slash commands, try agents. That's the tutorial. This guide is about what comes after the tutorial.</p>
 
-        <p>We at Stylus Nexus have been shipping a production SaaS (CritForge, a Next.js 14+ app with AI-powered content generation) with Claude Code as our primary development tool for months. Not as an experiment. Not as a side project. As our daily workflow across 14 specialized agents, 20+ workflow skills, 8 automated hooks, and 18 domain guidance files. Along the way, we've learned things that don't show up in beginner guides because you can't learn them until you've hit the walls yourself.</p>
+        <p>We've been shipping a production SaaS (CritForge, a Next.js 14+ app with AI-powered content generation) with Claude Code as our primary development tool for months. Not as an experiment. Not as a side project. As our daily workflow across 14 specialized agents, 20+ workflow skills, 8 automated hooks, and 18 domain guidance files. Along the way, we've learned things that don't show up in beginner guides because you can't learn them until you've hit the walls yourself.</p>
 
         <p>Here are three things you won't learn until you've shipped with agents for a while: <strong>context compounds</strong> (a CLAUDE.md with 15 well-earned gotchas prevents more bugs than one with 3 generic rules), <strong>agents need memory</strong> (without persistent memory, your agents rediscover the same domain knowledge every conversation), and <strong>hooks prevent more bugs than tests</strong> (automated context injection at the right moment catches classes of mistakes that test suites only find after the fact).</p>
 
@@ -79,7 +79,7 @@
 
         <h3>The Root CLAUDE.md</h3>
 
-        <p>This is the file Claude reads on every conversation. It should contain the things that apply everywhere, and it should be ruthlessly curated. Ours covers five categories:</p>
+        <p>This is the file Claude reads on every conversation. It should contain the stuff that applies everywhere, and it needs to be ruthlessly curated. Ours covers five categories:</p>
 
         <ul>
           <li><strong>Project overview</strong> - What the app does, its positioning, the tech stack. Two paragraphs, not two pages.</li>
@@ -157,7 +157,7 @@ src/lib/prompts/, or src/lib/guardrails/.
 
         <h3>Our 14 Active Agents</h3>
 
-        <p>These aren't theoretical. They're agents we invoke regularly across our development workflow:</p>
+        <p>These aren't theoretical. We invoke them regularly across our development workflow:</p>
 
         <ul>
           <li><strong>Engineering</strong>: <code>ui-engineer</code>, <code>backend-architect</code>, <code>supabase-specialist</code>, <code>ai-engineer</code></li>
@@ -168,7 +168,7 @@ src/lib/prompts/, or src/lib/guardrails/.
 
         <h3>When to Create an Agent vs. Extend CLAUDE.md</h3>
 
-        <p>Not everything needs its own agent. Here's the decision framework we use:</p>
+        <p>Not everything needs its own agent. Here's how we decide:</p>
 
         <ul>
           <li><strong>Create an agent</strong> when a domain is recurring, needs specialized knowledge, benefits from its own persistent memory, or requires specific tools. Our <code>supabase-specialist</code> exists because database migrations have enough nuance (RLS policies, idempotent DDL, type generation) that a generalist gets it wrong regularly.</li>
@@ -265,7 +265,7 @@ Write insights back after completing work.</code></pre>
         <p>Every agent follows the same memory lifecycle:</p>
 
         <ul>
-          <li><strong>Before starting work</strong>: read your <code>MEMORY.md</code> to load prior context. This is the single most important step. Without it, the agent operates without the benefit of past experience.</li>
+          <li><strong>Before starting work</strong>: read your <code>MEMORY.md</code> to load prior context. This is the single most important step. Without it, the agent starts every task blind to everything it's learned before.</li>
           <li><strong>After completing work</strong>: write insights back to memory. If you discovered a pattern, hit a wall, or made a decision worth remembering, persist it.</li>
         </ul>
 
@@ -302,7 +302,7 @@ Write insights back after completing work.</code></pre>
           <p>It's loaded into context every time the agent starts. A 500-line memory file burns tokens on old insights while crowding out the actual task. Use topic files (<code>patterns.md</code>, <code>issues.md</code>) for details, and link to them from the index. One line per insight, with a link for depth.</p>
         </div>
 
-        <p>Memory is what turns agents from stateless tools into teammates who learn. The backend architect who remembers that <code>jsonMode</code> only works with OpenAI doesn't need to rediscover it through a 30-minute debugging session. The UI engineer who remembers that <code>useSearchParams()</code> needs a Suspense boundary doesn't ship that bug again. Over time, each agent's memory becomes a curated knowledge base for its domain, built from real project experience rather than generic documentation.</p>
+        <p>Memory is what turns agents from stateless tools into teammates who learn. The backend architect who remembers that <code>jsonMode</code> only works with OpenAI doesn't need to rediscover it through a 30-minute debugging session. The UI engineer who remembers that <code>useSearchParams()</code> needs a Suspense boundary doesn't ship that bug again. Over time, each agent's memory becomes a curated knowledge base for its domain, built from real mistakes and real wins rather than generic docs.</p>
       </section>
 
       <!-- Section 5 -->
@@ -513,11 +513,11 @@ Before any creative work: features, components, new behavior.
       <section id="orchestration">
         <h2><span class="section-num">7</span>Multi-Agent Orchestration</h2>
 
-        <p>Individual agents are useful. Multiple agents working together are transformative. Once you've got specialized agents that each do their job well, the next question is: how do you coordinate them? The answer isn't a framework. It's a set of dispatch patterns that match how work actually flows.</p>
+        <p>A single specialist agent is good. Several of them working in concert is where things get interesting. Once you've got agents that each do their job well, the next question is: how do you coordinate them? The answer isn't a framework. It's a set of dispatch patterns that match how work actually flows.</p>
 
         <h3>Parallel Dispatch</h3>
 
-        <p>Some tasks are naturally independent. When we needed to evaluate a new feature's impact, we asked our UI engineer and marketing agent the same question at the same time: "How should we present the new campaign knowledge graph to users?" Both worked independently, the UI engineer focused on component architecture and interaction patterns, the marketing agent focused on positioning and user-facing copy. We synthesized their recommendations into a single plan that was better than either would've produced alone.</p>
+        <p>Some tasks are naturally independent. When we needed to evaluate a new feature's impact, we asked our UI engineer and marketing agent the same question at the same time: "How should we present the new campaign knowledge graph to users?" Both worked independently. The UI engineer focused on component architecture and interaction patterns. The marketing agent focused on positioning and user-facing copy. We synthesized their recommendations into a single plan that was better than either would've produced alone.</p>
 
         <p>The pattern is straightforward: identify tasks with no shared state or sequential dependencies, dispatch agents in parallel, then merge the results. You don't need a message bus or an orchestration layer. You need to recognize when two questions can be answered independently.</p>
 
@@ -607,7 +607,7 @@ Run generation 10 times → collect metrics
 
         <h3>How It Works in Practice</h3>
 
-        <p>An experiment script runs your generation N times (we typically use 10 for quick checks, 25-50 for model comparisons), collects structured metrics, and produces a summary you can actually act on. There's no magic framework. It's a script that calls your generation endpoint, parses the output, checks it against your schema, scores it on whatever dimensions matter, and reports the results.</p>
+        <p>An experiment script runs your generation N times (we typically use 10 for quick checks, 25-50 for model comparisons), collects structured metrics, and produces a summary you can actually act on. There's no magic framework here. It's a script that calls your generation endpoint, parses the output, checks it against your schema, scores it on whatever dimensions matter, and reports the results.</p>
 
         <p>What we measure depends on the content type, but it generally falls into three categories:</p>
 
@@ -651,7 +651,7 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
       <section id="full-stack">
         <h2><span class="section-num">9</span>The Full Stack</h2>
 
-        <p>We've walked through each layer individually. Now let's see how they compose. The whole point of this architecture is that the layers aren't independent features you bolt on. They're a stack, and each layer amplifies the ones below it.</p>
+        <p>We've covered each layer on its own. Now let's see how they compose. The whole point is that these aren't independent features you bolt on. They're a stack, and each layer amplifies the ones below it.</p>
 
         <div class="code-header"><span>The Agent Infrastructure Stack</span><button class="copy-btn">Copy</button></div>
 <pre><code>┌─────────────────────────────────────────────────────────────────────┐
@@ -741,7 +741,7 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
       <section id="failures">
         <h2><span class="section-num">11</span>What Didn't Work</h2>
 
-        <p>We'd be doing you a disservice if we only shared what worked. Here are the failures that taught us the most. Each one is a pattern we tried, a reason it broke, and what replaced it.</p>
+        <p>It wouldn't be honest to only share what worked. Here are the failures that taught us the most. Each one is a pattern we tried, a reason it broke, and what replaced it.</p>
 
         <div class="callout failure">
           <strong>Failure 1: The Mega-Agent</strong>
@@ -802,7 +802,7 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
 
         <p>Start with the domain context loader (PreToolUse). It's the easiest to implement and has the highest impact. When Claude touches a file in your auth directory, the auth guidance loads automatically. When it touches your database code, the migration patterns load. No manual remembering required.</p>
 
-        <p>This is the moment the system starts feeling less like a collection of files and more like an intelligent assistant that knows what you need before you ask.</p>
+        <p>This is the moment it stops feeling like a collection of config files and starts feeling like a system that knows what you need before you ask.</p>
 
         <h3>Week 5+: Add Skills and Iterate</h3>
 
@@ -826,7 +826,7 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
 
       <!-- Footer -->
       <footer class="site-footer">
-        <p>Built by <a href="https://github.com/stylusnexus">Stylus Nexus</a> &mdash; powers <a href="https://www.getcritforge.com">CritForge</a>.</p>
+        <p>Built by <a href="https://github.com/stylusnexus">Stylus Nexus</a>, the team behind <a href="https://www.getcritforge.com">CritForge</a>.</p>
         <p style="margin-top: 0.5rem;">Licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</p>
       </footer>
 
