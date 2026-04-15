@@ -1,17 +1,17 @@
 :root {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #1c2128;
-  --bg-code: #1a1e24;
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted: #6e7681;
-  --accent: #8B0000;
-  --accent-light: #b91c1c;
-  --accent-glow: rgba(139, 0, 0, 0.15);
-  --gold: #d4a84b;
-  --border: #30363d;
-  --border-light: #21262d;
+  --bg-primary: #172033;
+  --bg-secondary: #1c2840;
+  --bg-tertiary: #22304d;
+  --bg-code: #141c2e;
+  --text-primary: #f0f4f8;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent: #d69e2e;
+  --accent-light: #ecc94b;
+  --accent-glow: rgba(214, 158, 46, 0.12);
+  --navy: #1a365d;
+  --border: #2d3f5e;
+  --border-light: #243352;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
   --content-width: 760px;
@@ -19,6 +19,7 @@
   --sidebar-width: 260px;
 }
 
+/* ─── 1. Reset ─────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; scroll-padding-top: 2rem; }
 body {
@@ -30,16 +31,19 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ─── 2. Scroll Progress Bar ────────────────────────────────────────────────── */
 .scroll-progress {
   position: fixed;
   top: 0;
   left: 0;
   height: 3px;
+  width: 0%;
   background: var(--accent);
   z-index: 1000;
   transition: width 50ms linear;
 }
 
+/* ─── 3. Layout Grid ─────────────────────────────────────────────────────────  */
 .page-layout {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
@@ -115,6 +119,7 @@ body {
   .main-content { padding: 4rem 1.25rem 4rem; }
 }
 
+/* ─── 4. Typography ──────────────────────────────────────────────────────────  */
 h1 { font-size: 2.75rem; font-weight: 800; line-height: 1.15; margin-bottom: 1rem; letter-spacing: -0.02em; }
 h1 .accent { color: var(--accent-light); }
 h2 {
@@ -134,13 +139,14 @@ strong { color: var(--text-primary); font-weight: 600; }
 ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; color: var(--text-secondary); }
 li { margin-bottom: 0.4rem; }
 
+/* ─── 5. Code Blocks ─────────────────────────────────────────────────────────  */
 code {
   font-family: var(--font-mono);
   font-size: 0.875em;
   background: var(--bg-code);
   padding: 0.15em 0.4em;
   border-radius: 4px;
-  color: var(--gold);
+  color: var(--accent);
 }
 pre {
   position: relative;
@@ -189,12 +195,13 @@ pre code {
   transition: all 0.15s;
 }
 .copy-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
-.copy-btn.copied { color: var(--gold); border-color: var(--gold); }
+.copy-btn.copied { color: var(--accent-light); border-color: var(--accent); }
 @media (max-width: 900px) {
   pre, .code-header { margin-left: -1.25rem; margin-right: -1.25rem; border-radius: 0; }
   .code-header + pre { border-radius: 0; }
 }
 
+/* ─── 6. Callouts ────────────────────────────────────────────────────────────  */
 .callout {
   border-left: 3px solid var(--accent);
   background: var(--accent-glow);
@@ -202,10 +209,13 @@ pre code {
   margin: 1.5rem 0;
   border-radius: 0 6px 6px 0;
 }
-.callout.tip { border-left-color: var(--gold); background: rgba(212, 168, 75, 0.08); }
-.callout.insight { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.08); }
-.callout p { margin-bottom: 0; }
+.callout.tip { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.08); }
+.callout.warning { border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.08); }
+.callout.failure { border-left-color: #ef4444; background: rgba(239, 68, 68, 0.08); }
+.callout p { margin-bottom: 0; color: var(--text-secondary); }
 .callout strong { display: block; margin-bottom: 0.25rem; color: var(--text-primary); }
+
+/* ─── 7. File Trees ──────────────────────────────────────────────────────────  */
 .file-tree {
   font-family: var(--font-mono);
   font-size: 0.85rem;
@@ -220,8 +230,10 @@ pre code {
 .file-tree summary { cursor: pointer; color: var(--text-primary); font-weight: 500; }
 .file-tree summary:hover { color: var(--accent-light); }
 .file-tree details { padding-left: 1.25rem; }
-.file-tree .highlight { color: var(--gold); }
+.file-tree .highlight { color: var(--accent-light); }
 .file-tree .comment { color: var(--text-muted); font-style: italic; }
+
+/* ─── 8. Hero ────────────────────────────────────────────────────────────────  */
 .hero {
   text-align: center;
   padding: 3rem 0 4rem;
@@ -231,8 +243,8 @@ pre code {
 .hero-badge {
   display: inline-block;
   font-size: 0.8rem;
-  color: var(--gold);
-  border: 1px solid rgba(212, 168, 75, 0.3);
+  color: var(--accent-light);
+  border: 1px solid rgba(214, 158, 46, 0.4);
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
   margin-bottom: 1.25rem;
@@ -246,6 +258,8 @@ pre code {
   margin: 0 auto;
   line-height: 1.6;
 }
+
+/* ─── 9. Section Numbers ─────────────────────────────────────────────────────  */
 .section-num {
   display: inline-block;
   width: 2rem;
@@ -254,13 +268,15 @@ pre code {
   text-align: center;
   background: var(--accent-glow);
   color: var(--accent-light);
-  border: 1px solid rgba(139, 0, 0, 0.3);
+  border: 1px solid rgba(214, 158, 46, 0.3);
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 700;
   margin-right: 0.75rem;
   vertical-align: middle;
 }
+
+/* ─── 10. Before/After Diffs ─────────────────────────────────────────────────  */
 .diff-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
 .diff-container pre { margin: 0; }
 .diff-label {
@@ -270,9 +286,20 @@ pre code {
   color: var(--text-muted);
   margin-bottom: 0.5rem;
 }
-.diff-before .diff-label { color: #f85149; }
-.diff-after .diff-label { color: #3fb950; }
+.diff-before .diff-label { color: #f87171; }
+.diff-after .diff-label { color: #4ade80; }
 @media (max-width: 900px) { .diff-container { grid-template-columns: 1fr; } }
+
+/* ─── 11. Sidebar Logo ───────────────────────────────────────────────────────  */
+.sidebar-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+/* ─── 12. Footer ─────────────────────────────────────────────────────────────  */
 .site-footer {
   text-align: center;
   padding: 3rem 0;
@@ -282,3 +309,4 @@ pre code {
   font-size: 0.85rem;
 }
 .site-footer a { color: var(--text-secondary); }
+.site-footer a:hover { color: var(--accent-light); }
