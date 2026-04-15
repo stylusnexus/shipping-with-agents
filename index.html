@@ -554,6 +554,7 @@ exit 0</code></pre>
           <li><strong>Structured specs</strong>: we write specs before implementation on anything non-trivial. Specs go through drafting, review, and approval before a plan gets written. The brainstorm and write-plan skills handle this naturally. Prevents building the wrong thing.</li>
           <li><strong><code>deploy</code></strong>: merges dev to main with a squash commit formatted for release-please automation. One command, consistent deploys, proper changelogs.</li>
           <li><strong><code>orient</code></strong>: rebuilds working context after <code>/clear</code>. When you compact or clear your conversation, this skill re-loads the project state, current branch, recent changes, and open issues so you don't start cold.</li>
+          <li><strong><code>visualize-project</code></strong>: generates tiered Mermaid architecture diagrams based on project complexity. Runs during setup (Phase 1.5, between Discover and Generate CLAUDE.md) to ground your CLAUDE.md in confirmed visuals, or anytime to regenerate. Scores complexity from 10 signals and outputs 1&ndash;6 diagrams to <code>docs/architecture/diagrams/</code>.</li>
         </ul>
 
         <h3>Skill Definition Structure</h3>
