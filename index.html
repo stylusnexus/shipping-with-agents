@@ -582,22 +582,24 @@ Agent 2 (product-manager): "Define user stories for feature discovery"
 
         <p>The pipeline reviews your uncommitted changes, identifies issues (missing types, incomplete error handling, style violations), fixes them automatically, commits everything with a properly formatted conventional commit message, pushes to the remote, creates a PR, and merges it. The entire flow is encoded in a single skill that chains these steps with error handling at each gate. If the review finds something it can't auto-fix, it stops and asks you.</p>
 
-        <h3>Spec-Workflow: Structured Specification Development</h3>
+        <p>Once the PR is merged, the <code>deploy</code> skill handles production: it merges your development branch to main with a squash commit formatted for release automation (release-please, changesets, or whatever you use). Review-and-ship gets code into a PR. Deploy gets it to production. Two skills, clean separation.</p>
 
-        <p>For larger features, we use a gated specification workflow that enforces discipline across the full lifecycle:</p>
+        <h3>Gated Development: The Skill Chain</h3>
 
-        <div class="code-header"><span>Spec-workflow phases</span><button class="copy-btn">Copy</button></div>
-<pre><code>Phase 1: Write spec         → Draft the specification document
-Phase 2: Get approval       → Review gate — spec must be approved before proceeding
-Phase 3: Write plan         → Break the approved spec into implementation steps
-Phase 4: Execute            → Build according to plan, with review checkpoints
-Phase 5: Verify             → Confirm implementation matches spec</code></pre>
+        <p>For larger features, we chain skills together so each phase has an explicit gate before the next one starts:</p>
 
-        <p>Each phase has an explicit gate. You can't start writing a plan until the spec is approved. You can't start building until the plan is reviewed. This prevents the most common failure mode in AI-assisted development: jumping straight to code before the problem is well-defined. The structured specs MCP server tracks status, approvals, and implementation logs so nothing falls through the cracks.</p>
+        <div class="code-header"><span>Skill chain for gated development</span><button class="copy-btn">Copy</button></div>
+<pre><code>Phase 1: brainstorm         → Explore the problem, propose approaches, get approval
+Phase 2: write-plan         → Break the approved design into implementation steps
+Phase 3: execute-plan       → Build according to plan, with review checkpoints
+Phase 4: verify             → Confirm implementation works (build, tests, manual check)
+Phase 5: review-and-ship    → Review diff, commit, push, create PR</code></pre>
+
+        <p>You can't start writing a plan until the brainstorm is approved. You can't start building until the plan is reviewed. This prevents the most common failure mode in AI-assisted development: jumping straight to code before the problem is well-defined. Each skill hands off to the next, and every handoff is a checkpoint where you can course-correct.</p>
 
         <div class="callout tip">
           <strong>Start with sequential agents.</strong>
-          <p>Parallel dispatch is powerful but harder to coordinate. Get comfortable with one agent at a time before launching three. Master the review-merge pipeline and structured specs first. Once those feel natural, you'll develop an intuition for which tasks can safely run in parallel and which need sequential gates.</p>
+          <p>Parallel dispatch is powerful but harder to coordinate. Get comfortable with one agent at a time before launching three. Master the skill chain (brainstorm, plan, execute, verify, ship) first. Once that feels natural, you'll develop an intuition for which tasks can safely run in parallel and which need sequential gates.</p>
         </div>
       </section>
 
@@ -829,7 +831,7 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
 
         <h3>Week 5+: Add Skills and Iterate</h3>
 
-        <p>Install brainstorming, TDD, and verification. Those three skills alone enforce the discipline loop of think, build, verify. Then build custom skills for your specific workflows. A deploy skill. A spec workflow. An experiment runner if you're doing AI work. Let the system grow organically from the problems you actually hit.</p>
+        <p>The starter template ships with 11 skills covering the full workflow: brainstorm, write-plan, execute-plan, TDD, debug, verify, review-and-ship, deploy, orient, activity-summary, and experiment. Start with brainstorm + TDD + verify (those three enforce the think, build, verify discipline loop), then adopt the rest as your workflow demands. Let the system grow organically from the problems you actually hit.</p>
 
         <p>The key is to let each layer earn its place. Don't build agent memory until your agents are forgetting things. Don't build experiments until you're guessing at quality. Each layer should solve a pain you've already felt.</p>
 
