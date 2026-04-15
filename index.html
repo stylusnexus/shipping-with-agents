@@ -533,12 +533,17 @@ exit 0</code></pre>
         <p>Individual skills are useful. Chained skills are transformative. Here's the chain we run for every significant feature:</p>
 
         <div class="code-header"><span>Feature development chain</span><button class="copy-btn">Copy</button></div>
-<pre><code>brainstorm → write-plan → execute-plan → verify → review-and-ship
-   think           plan           build            verify          ship</code></pre>
+<pre><code>brainstorm → write-plan → execute-plan → verify → review → ship
+   think          plan          build         test     review   ship</code></pre>
 
-        <p>Each skill hands off to the next. Brainstorming produces a design. Writing-plans turns that design into an implementation plan with ordered steps. Executing-plans works through the plan with review checkpoints. Verification confirms the work actually works (not just compiles). Review-merge-pipeline does code review, fixes issues, commits, creates a PR, and merges.</p>
+        <p>Each skill hands off to the next. Brainstorming produces a design. Writing-plans turns that design into an implementation plan with ordered steps. Executing-plans works through the plan with review checkpoints. Verification confirms the work actually works (not just compiles). Review-and-ship runs an AI code review, fixes any issues found, then commits, pushes, and creates a PR.</p>
 
-        <p>The chain enforces: think, plan, build, verify, ship. You can't skip straight to build without thinking. You can't ship without verifying. The discipline is encoded in the workflow, not left to willpower.</p>
+        <p>The chain enforces: think, plan, build, test, <strong>review</strong>, ship. You can't skip straight to build without thinking. You can't ship without testing. And you can't ship without review.</p>
+
+        <div class="callout">
+          <strong>Code review is baked in, not bolted on.</strong>
+          <p>Notice that review is a built-in step in the pipeline, not a separate process someone remembers to do. Every feature that ships goes through an AI code reviewer that checks for bugs, security issues, and convention violations &mdash; before a human ever sees the PR. Solo developers get review discipline without needing a team. Teams get a consistent baseline review that frees human reviewers to focus on design and architecture instead of nitpicking style.</p>
+        </div>
 
         <h3>Custom Project-Specific Skills</h3>
 
