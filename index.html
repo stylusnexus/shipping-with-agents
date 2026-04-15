@@ -214,6 +214,22 @@ Write insights back after completing work.</code></pre>
 
         <p>This matters because the subagent doesn't carry the full conversation context. It gets a focused task with the right domain framing. A <code>ux-designer</code> reviewing a component doesn't need to know about your database migration strategy. A <code>backend-architect</code> designing an API doesn't need your CSS conventions. The narrower context means better output.</p>
 
+        <h3>Global vs. Project Scope</h3>
+
+        <p>Almost everything in Claude Code's configuration system exists at two levels: <strong>global</strong> (your user profile, applies everywhere) and <strong>project</strong> (checked into the repo, applies to that codebase). This applies to agents, hooks, settings, and CLAUDE.md itself. Understanding the precedence matters.</p>
+
+        <ul>
+          <li><strong>CLAUDE.md</strong>: A global one lives at <code>~/.claude/CLAUDE.md</code> and loads for every project. A project one lives at the repo root. Both are loaded, with project-level content taking precedence when they conflict.</li>
+          <li><strong>Agents</strong>: Global agents in <code>~/.claude/agents/</code> are available everywhere (your personal workflow specialists). Project agents in <code>.claude/agents/</code> travel with the repo and are shared with your team. If both define an agent with the same name, the project version wins.</li>
+          <li><strong>Hooks</strong>: Global hooks in <code>~/.claude/settings.json</code> run for every project. Project hooks in <code>.claude/settings.json</code> run only for that repo. Both fire, they don't override. This means your global "notify me when idle" hook works alongside the project's "check compliance on every edit" hook.</li>
+          <li><strong>Memory</strong>: Global project memory (<code>~/.claude/projects/.../memory/</code>) persists user preferences across all conversations. Agent memory (<code>.claude/agent-memory/</code>) is project-scoped and version-controlled, so the whole team benefits from accumulated domain knowledge.</li>
+        </ul>
+
+        <div class="callout tip">
+          <strong>A practical split.</strong>
+          <p>Put personal workflow preferences at the global level (notification hooks, your preferred commit style, agents for tasks you do across all projects). Put domain knowledge at the project level (compliance hooks, specialized agents, guidances). Your teammates get the project-level setup automatically when they clone the repo. Your personal preferences stay yours.</p>
+        </div>
+
         <div class="callout failure">
           <strong>We learned this the hard way.</strong>
           <p>We started with one mega-agent that tried to do everything. It knew about database patterns, UI conventions, content strategy, analytics, and deployment. Output quality dropped because domain expertise was too diluted. The agent would mix concerns, applying backend patterns to frontend code or suggesting UI changes during infrastructure work. Splitting into 14 specialists was the fix. Each agent is dumber in isolation but dramatically better at its specific job.</p>
