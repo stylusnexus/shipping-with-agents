@@ -474,6 +474,19 @@ exit 0</code></pre>
           </div>
         </div>
 
+        <h3>Creating Hooks from Conversation</h3>
+
+        <p>Writing hooks by hand works, but there's a faster way. The <strong>hookify</strong> plugin analyzes your conversation history to find behaviors worth preventing, then generates the hook automatically.</p>
+
+        <p>Say Claude just made a mistake &mdash; it edited a migration file without checking the existing schema, or it committed without running the build. Instead of writing a hook from scratch, you say <code>/hookify</code> and it reviews the conversation, identifies the failure pattern, and generates a <code>PreToolUse</code> or <code>PostToolUse</code> hook to prevent it from happening again. The hook goes straight into your <code>.claude/settings.json</code>.</p>
+
+        <p>This is how most of our hooks were born. We didn't design them upfront. We hit a problem, said "that should never happen again," and hookify turned the lesson into an automated guardrail. It's the fastest path from "that was a mistake" to "that can't happen anymore."</p>
+
+        <div class="callout tip">
+          <strong>Install hookify.</strong>
+          <p><code>claude install-plugin hookify</code>. Then use <code>/hookify</code> after a mistake, or <code>/hookify list</code> to see your current rules, or <code>/hookify configure</code> to enable/disable individual hooks. Each rule can target specific hook events (PreToolUse, PostToolUse, Stop) and specific tool matchers.</p>
+        </div>
+
         <div class="callout">
           <strong>Hooks are the difference between "Claude should know this" and "Claude always knows this."</strong>
           <p>They turn tribal knowledge into automated guardrails. Every gotcha in your CLAUDE.md started as something someone forgot. Hooks make sure the next person (or the next agent) doesn't forget it either. We have 8 hooks in production, and they prevent more bugs than any single test suite.</p>
