@@ -60,6 +60,11 @@
 
       <p style="text-align: center; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 3rem;">Want to skip straight to a working setup? Fork the <a href="https://github.com/stylusnexus/agent-starter">starter template</a>.</p>
 
+      <div class="callout adapter">
+        <strong>Not just for Claude Code</strong>
+        <p>This guide uses Claude Code for examples, but the patterns &mdash; layered context, domain agents, automated guardrails, persistent memory &mdash; apply to any AI coding assistant. Look for <span style="color: #7c3aed; font-weight: 600;">adapter callouts</span> throughout the guide that map Claude Code concepts to Cursor, GitHub Copilot, Windsurf, and Codex equivalents.</p>
+      </div>
+
       <!-- Section 1 -->
       <section id="why">
         <h2><span class="section-num">1</span>Why This Exists</h2>
@@ -148,6 +153,11 @@ src/lib/prompts/, or src/lib/guardrails/.
         <div class="callout tip">
           <strong>Start small.</strong>
           <p>Your CLAUDE.md doesn't need to be 500 lines on day one. Start with dev commands and 3-4 gotchas. It'll grow naturally as you hit the same issues twice. Our gotchas section started with 3 entries. It's at 15 now, and every single one exists because we made the same mistake more than once.</p>
+        </div>
+
+        <div class="callout adapter">
+          <strong>Other tools: instruction files</strong>
+          <p>Every AI coding tool has its version of CLAUDE.md. <strong>Cursor</strong>: <code>.cursorrules</code> (project root). <strong>GitHub Copilot</strong>: <code>.github/copilot-instructions.md</code>. <strong>Windsurf</strong>: <code>.windsurfrules</code>. <strong>Codex</strong>: <code>AGENTS.md</code> or <code>codex.md</code>. The layered architecture pattern (root file + domain guidances loaded on demand) works in all of them &mdash; the file names and loading mechanisms differ, but the principle of separating always-on context from domain-specific context is universal.</p>
         </div>
       </section>
 
@@ -241,6 +251,11 @@ Write insights back after completing work.</code></pre>
           <strong>We learned this the hard way.</strong>
           <p>We started with one mega-agent that tried to do everything. It knew about database patterns, UI conventions, content strategy, analytics, and deployment. Output quality dropped because domain expertise was too diluted. The agent would mix concerns, applying backend patterns to frontend code or suggesting UI changes during infrastructure work. Splitting into 14 specialists was the fix. Each agent is dumber in isolation but dramatically better at its specific job.</p>
         </div>
+
+        <div class="callout adapter">
+          <strong>Other tools: domain specialization</strong>
+          <p>Claude Code has first-class agent definitions (<code>.claude/agents/</code>). Other tools don't &mdash; yet. But the pattern still works. <strong>Cursor</strong>: create separate <code>.cursorrules</code> sections for different domains, or use Cursor's chat personas. <strong>Copilot</strong>: organize domain knowledge into separate instruction files and reference them. <strong>Codex</strong>: use sections in <code>AGENTS.md</code> to define domain-specific personas. The core insight &mdash; specialized context produces better output than generalist context &mdash; is tool-agnostic. Even a simple "When I ask about database work, also read <code>docs/database-patterns.md</code>" in your instructions file gets you 80% of the benefit.</p>
+        </div>
       </section>
 
       <!-- Section 4 -->
@@ -326,6 +341,11 @@ Write insights back after completing work.</code></pre>
         </div>
 
         <p>Memory is what turns agents from stateless tools into teammates who learn. The backend architect who remembers that <code>jsonMode</code> only works with OpenAI doesn't need to rediscover it through a 30-minute debugging session. The UI engineer who remembers that <code>useSearchParams()</code> needs a Suspense boundary doesn't ship that bug again. Over time, each agent's memory becomes a curated knowledge base for its domain, built from real mistakes and real wins rather than generic docs.</p>
+
+        <div class="callout adapter">
+          <strong>Other tools: persistent knowledge</strong>
+          <p>Agent memory is a Claude Code feature &mdash; other tools don't persist knowledge between sessions natively. But the pattern (accumulated domain knowledge that loads at the start of each session) can be replicated with files. Create a <code>docs/ai-memory/</code> directory with markdown files organized by domain. Add "Before starting work, read the relevant memory file in <code>docs/ai-memory/</code>" to your instructions file. <strong>Cursor</strong>: reference these files with <code>@docs/ai-memory/backend.md</code> at the start of conversations. <strong>Copilot</strong>: include a pointer in <code>copilot-instructions.md</code>. The manual step (telling the AI to read the file) is what Claude Code automates, but the knowledge itself is just markdown files &mdash; they work everywhere.</p>
+        </div>
       </section>
 
       <!-- Section 5 -->
@@ -458,6 +478,11 @@ exit 0</code></pre>
           <strong>Hooks are the difference between "Claude should know this" and "Claude always knows this."</strong>
           <p>They turn tribal knowledge into automated guardrails. Every gotcha in your CLAUDE.md started as something someone forgot. Hooks make sure the next person (or the next agent) doesn't forget it either. We have 8 hooks in production, and they prevent more bugs than any single test suite.</p>
         </div>
+
+        <div class="callout adapter">
+          <strong>Other tools: automated guardrails</strong>
+          <p>Hooks are Claude Code's most unique feature &mdash; no other AI coding tool has a direct equivalent. But the <em>pattern</em> (automated context injection based on what files you're touching) can be approximated. <strong>All tools</strong>: use git hooks (<code>.git/hooks/pre-commit</code>) to run verification before commits &mdash; this works regardless of which AI tool made the changes. <strong>Cursor</strong>: Cursor's <code>@docs</code> and <code>@codebase</code> references provide manual context injection. <strong>CI/CD</strong>: move guardrail checks (build verification, compliance scanning) into your CI pipeline so they catch issues regardless of which tool authored the code. The principle is: don't rely on the developer (or agent) remembering to check. Automate the check.</p>
+        </div>
       </section>
 
       <!-- Section 6 -->
@@ -529,6 +554,11 @@ Before any creative work: features, components, new behavior.
         <div class="callout tip">
           <strong>The starter template ships with 11 skills.</strong>
           <p>Our <a href="https://github.com/stylusnexus/agent-starter">agent-starter</a> includes: brainstorm, TDD, verify, write-plan, execute-plan, orient, debug, review-and-ship, activity-summary, and experiment. Together they cover the full workflow: think, plan, build, test, debug, verify, measure, ship. Start with brainstorm + TDD + verify (those three alone will change how you work), then adopt the rest as you need them.</p>
+        </div>
+
+        <div class="callout adapter">
+          <strong>Other tools: reusable workflows</strong>
+          <p>Claude Code skills are slash commands backed by markdown files. Other tools achieve similar workflow automation differently. <strong>Cursor</strong>: define workflows as step-by-step instructions in your <code>.cursorrules</code> or use Cursor's Composer for multi-step tasks. <strong>Windsurf</strong>: Flows are Windsurf's equivalent &mdash; multi-step AI workflows with checkpoints. <strong>Any tool</strong>: the simplest version is a <code>docs/workflows/</code> directory with markdown files describing each workflow. Tell your AI "follow the process in <code>docs/workflows/feature-development.md</code>." It's less automatic than slash commands, but the workflow discipline (think &rarr; plan &rarr; build &rarr; verify &rarr; ship) matters more than the invocation mechanism.</p>
         </div>
       </section>
 

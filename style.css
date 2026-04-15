@@ -212,6 +212,8 @@ pre code {
 .callout.tip { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.08); }
 .callout.warning { border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.08); }
 .callout.failure { border-left-color: #ef4444; background: rgba(239, 68, 68, 0.08); }
+.callout.adapter { border-left-color: #8b5cf6; background: rgba(139, 92, 246, 0.08); }
+.callout.adapter strong { color: #7c3aed; }
 .callout p { margin-bottom: 0; color: var(--text-secondary); }
 .callout strong { display: block; margin-bottom: 0.25rem; color: var(--text-primary); }
 
