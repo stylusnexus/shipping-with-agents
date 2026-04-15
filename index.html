@@ -157,16 +157,21 @@ src/lib/prompts/, or src/lib/guardrails/.
 
         <p>Claude Code lets you define specialized agents that run as subagents within your main conversation. We've learned the hard way that one generalist agent doesn't scale. Domain expertise gets diluted when a single agent tries to be a backend architect, a UX designer, and a competitive analyst in the same breath. The fix is straightforward: one agent per domain, each with its own expertise, memory, and focus.</p>
 
-        <h3>Our 14 Active Agents</h3>
+        <h3>Our Active Agents</h3>
 
-        <p>These aren't theoretical. We invoke them regularly across our development workflow:</p>
+        <p>These aren't theoretical. We invoke them regularly across our development workflow, organized by function:</p>
 
         <ul>
-          <li><strong>Engineering</strong>: <code>ui-engineer</code>, <code>backend-architect</code>, <code>supabase-specialist</code>, <code>ai-engineer</code></li>
-          <li><strong>Content &amp; Domain</strong>: <code>epic-storyteller</code>, <code>game-cartographer</code>, <code>dnd-game-master</code>, <code>technical-writer</code></li>
-          <li><strong>Product &amp; Business</strong>: <code>product-manager</code>, <code>competitive-intel-analyst</code>, <code>conversion-analyst</code>, <code>reality-check-agent</code></li>
-          <li><strong>Design</strong>: <code>ux-designer</code>, <code>trend-researcher</code></li>
+          <li><strong>Engineering</strong>: <code>backend-engineer</code>, <code>ui-engineer</code>, <code>ai-engineer</code></li>
+          <li><strong>Product &amp; Strategy</strong>: <code>product-manager</code>, <code>competitive-intel-analyst</code></li>
+          <li><strong>Design &amp; Content</strong>: <code>ux-designer</code>, <code>technical-writer</code></li>
+          <li><strong>Domain specialists</strong>: agents specific to our product's content domain (every product has these, whether it's compliance, content, analytics, or industry-specific logic)</li>
         </ul>
+
+        <div class="callout tip">
+          <strong>The starter template ships with 6 ready-to-use agents.</strong>
+          <p>Our <a href="https://github.com/stylusnexus/agent-starter">agent-starter</a> includes definitions for backend-engineer, ui-engineer, ux-designer, ai-engineer, product-manager, and technical-writer, plus a <code>domain-specialist.md.example</code> template for creating agents specific to your product's domain. Each one comes with expertise areas, working style guidelines, and memory integration. Fork, customize, and add your own.</p>
+        </div>
 
         <h3>When to Create an Agent vs. Extend CLAUDE.md</h3>
 
