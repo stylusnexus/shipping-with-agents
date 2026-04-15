@@ -588,18 +588,41 @@ Agent 2 (product-manager): "Define user stories for feature discovery"
 
         <p>For larger features, we chain skills together so each phase has an explicit gate before the next one starts:</p>
 
-        <div class="code-header"><span>Skill chain for gated development</span><button class="copy-btn">Copy</button></div>
-<pre><code>Phase 1: brainstorm         → Explore the problem, propose approaches, get approval
-Phase 2: write-plan         → Break the approved design into implementation steps
-Phase 3: execute-plan       → Build according to plan, with review checkpoints
-Phase 4: verify             → Confirm implementation works (build, tests, manual check)
-Phase 5: review-and-ship    → Review diff, commit, push, create PR</code></pre>
+        <div class="code-header"><span>The full pipeline (skill names in bold)</span><button class="copy-btn">Copy</button></div>
+<pre><code>┌─────────────┐    ┌────────────┐    ┌──────────────┐
+│  brainstorm  │ →  │ write-plan │ →  │ execute-plan │
+│  explore,    │    │ break into │    │ build task   │
+│  propose,    │    │ steps with │    │ by task,     │
+│  get approval│    │ exact code │    │ TDD each one │
+└─────────────┘    └────────────┘    └──────┬───────┘
+                                            │
+                                            ▼
+                   ┌────────────┐    ┌──────────────┐
+                   │   deploy   │ ←  │review-and-   │
+                   │ squash to  │    │   ship       │
+                   │ main, push │    │ review, fix, │
+                   │ to prod    │    │ commit, PR   │
+                   └────────────┘    └──────┬───────┘
+                                            │
+                                     ┌──────┴───────┐
+                                     │   verify     │
+                                     │ build, test, │
+                                     │ lint, check  │
+                                     └──────────────┘</code></pre>
 
-        <p>You can't start writing a plan until the brainstorm is approved. You can't start building until the plan is reviewed. This prevents the most common failure mode in AI-assisted development: jumping straight to code before the problem is well-defined. Each skill hands off to the next, and every handoff is a checkpoint where you can course-correct.</p>
+        <p>You can't start writing a plan until the brainstorm is approved. You can't start building until the plan is reviewed. Each skill hands off to the next, and every handoff is a checkpoint where you can course-correct. This prevents the most common failure mode in AI-assisted development: jumping straight to code before the problem is well-defined.</p>
+
+        <h3>Second Opinions: Agents as Consultants</h3>
+
+        <p>One of the most underrated uses for multiple agents is getting a second opinion when you're stuck. If you've been debugging a database migration for 20 minutes and you're going in circles, spawn a fresh <code>backend-engineer</code> agent with just the problem description. It doesn't carry your conversation's accumulated assumptions and dead ends. It looks at the problem fresh.</p>
+
+        <p>We do this regularly. The main conversation has been working on a feature for a while and hits a wall. Rather than continuing to push through with increasingly stale context, we ask a specialist agent to take an independent look. The agent doesn't know what we've already tried (that's the point), so it approaches the problem without bias. Sometimes it finds the same answer we were circling around. Often it spots something we'd been looking right past.</p>
+
+        <p>This works for more than debugging. Stuck on an architecture decision? Ask the <code>backend-engineer</code> and <code>ui-engineer</code> independently how they'd approach it. Getting conflicting signals on a feature? Ask the <code>product-manager</code> to evaluate the trade-offs without knowing which side you're leaning toward. Fresh context is a feature, not a limitation.</p>
 
         <div class="callout tip">
           <strong>Start with sequential agents.</strong>
-          <p>Parallel dispatch is powerful but harder to coordinate. Get comfortable with one agent at a time before launching three. Master the skill chain (brainstorm, plan, execute, verify, ship) first. Once that feels natural, you'll develop an intuition for which tasks can safely run in parallel and which need sequential gates.</p>
+          <p>Parallel dispatch is powerful but harder to coordinate. Get comfortable with one agent at a time before launching three. Master the skill chain (brainstorm, plan, execute, verify, ship) first. Once that feels natural, you'll develop an intuition for which tasks can safely run in parallel and which need sequential gates. And when you're stuck, remember: a fresh agent with no context baggage is often exactly what you need.</p>
         </div>
       </section>
 
