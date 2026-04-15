@@ -61,19 +61,163 @@
       <!-- Section 1 -->
       <section id="why">
         <h2><span class="section-num">1</span>Why This Exists</h2>
-        <p>Content coming soon.</p>
+
+        <p>There's no shortage of "50 Claude Code tips" posts. They're genuinely useful if you're getting started. But they tend to stop at the surface: write a good CLAUDE.md, use slash commands, try agents. That's the tutorial. This guide is about what comes after the tutorial.</p>
+
+        <p>We at Stylus Nexus have been shipping a production SaaS (CritForge, a Next.js 14+ app with AI-powered content generation) with Claude Code as our primary development tool for months. Not as an experiment. Not as a side project. As our daily workflow across 14 specialized agents, 20+ workflow skills, 8 automated hooks, and 18 domain guidance files. Along the way, we've learned things that don't show up in beginner guides because you can't learn them until you've hit the walls yourself.</p>
+
+        <p>Here are three things you won't learn until you've shipped with agents for a while: <strong>context compounds</strong> (a CLAUDE.md with 15 well-earned gotchas prevents more bugs than one with 3 generic rules), <strong>agents need memory</strong> (without persistent memory, your agents rediscover the same domain knowledge every conversation), and <strong>hooks prevent more bugs than tests</strong> (automated context injection at the right moment catches classes of mistakes that test suites only find after the fact).</p>
+
+        <p>This isn't a replacement for the beginner guides. It's what comes next. If you've been using Claude Code for a few weeks and you're starting to wonder how to scale it beyond ad-hoc prompting, this is for you.</p>
       </section>
 
       <!-- Section 2 -->
       <section id="claude-md">
         <h2><span class="section-num">2</span>CLAUDE.md Architecture</h2>
-        <p>Content coming soon.</p>
+
+        <p>Most guides tell you to "write a good CLAUDE.md." That's true, but it undersells the actual architecture. In a production codebase, CLAUDE.md isn't a single file. It's a layered system: a root file that acts as the project brain, plus a directory of domain-specific guidance files that get loaded on demand.</p>
+
+        <h3>The Root CLAUDE.md</h3>
+
+        <p>This is the file Claude reads on every conversation. It should contain the things that apply everywhere, and it should be ruthlessly curated. Ours covers five categories:</p>
+
+        <ul>
+          <li><strong>Project overview</strong> - What the app does, its positioning, the tech stack. Two paragraphs, not two pages.</li>
+          <li><strong>Dev commands</strong> - <code>npm run dev</code>, <code>npm run build</code>, <code>npm run lint</code>, <code>npm test</code>. The commands someone needs on day one.</li>
+          <li><strong>Critical rules</strong> - Security requirements (always sanitize AI input, never expose service keys client-side), compliance rules, authentication patterns. Things where getting it wrong isn't a bug, it's an incident.</li>
+          <li><strong>Common gotchas</strong> - The bugs that keep biting. Ours has 15 numbered gotchas, each one earned by a real mistake: "Profile mocks MUST include trial fields even for premium tiers," "jsonMode only works with OpenAI provider, not Anthropic," "<code>useSearchParams()</code> requires a Suspense boundary." Every entry is a bug that happened at least twice.</li>
+          <li><strong>Architecture links</strong> - Pointers into deeper docs, not the docs themselves. A line like "See <code>.claude/guidances/testing-strategy.md</code> for E2E vs integration test guidance" keeps the root file scannable.</li>
+        </ul>
+
+        <h3>Domain Guidances</h3>
+
+        <p>Here's the key insight: <strong>not every piece of context belongs in CLAUDE.md</strong>. If you stuff everything into one file, you're burning tokens on AI safety patterns when the developer is editing CSS. Domain guidances are separate files that get loaded on-demand by hooks when you touch relevant code.</p>
+
+        <p>We have 18 of these:</p>
+
+        <div class="file-tree">
+          <details open>
+            <summary>.claude/guidances/</summary>
+            <div>ai-safety-patterns.md</div>
+            <div>ai-model-routing.md</div>
+            <div>api-docs-workflow.md</div>
+            <div>content-detail-routes.md</div>
+            <div>cqls-patterns.md</div>
+            <div>experiment-framework.md</div>
+            <div>feedback-system.md</div>
+            <div>module-organization.md</div>
+            <div>posthog-patterns.md</div>
+            <div>rendering-assets.md</div>
+            <div>service-layer-patterns.md</div>
+            <div>slm-architecture.md</div>
+            <div>srd-compliance.md</div>
+            <div>supabase-auth-patterns.md</div>
+            <div>testing-strategy.md</div>
+            <div>ux-design-patterns.md</div>
+            <div>user-docs.md</div>
+            <div>agent-memory-protocol.md</div>
+          </details>
+        </div>
+
+        <p>Each guidance file is self-contained. It explains when it applies, what patterns to follow, and what mistakes to avoid. Here's the general structure:</p>
+
+        <div class="code-header"><span>example-guidance.md</span><button class="copy-btn">Copy</button></div>
+<pre><code># AI Safety Patterns
+
+## When This Guidance Applies
+Loaded automatically when editing files in src/lib/ai/,
+src/lib/prompts/, or src/lib/guardrails/.
+
+## Key Patterns
+- Always sanitize user input before AI calls
+- Validate AI output before returning to user
+- Log all AI interactions for audit
+
+## Anti-Patterns
+- Never trust raw AI output in user-facing responses
+- Never skip sanitization "just for internal tools"
+
+## Key Files
+- src/lib/ai/guardrails/safety.ts
+- src/lib/ai/validation/output-validator.ts</code></pre>
+
+        <p>The "When This Guidance Applies" section isn't just documentation. It tells the hooks system which files should trigger loading this guidance. When you edit a file in <code>src/lib/ai/</code>, the AI safety guidance loads automatically. When you're working on analytics, the PostHog patterns load. You don't have to remember which guidance exists. The system remembers for you.</p>
+
+        <div class="callout tip">
+          <strong>Start small.</strong>
+          <p>Your CLAUDE.md doesn't need to be 500 lines on day one. Start with dev commands and 3-4 gotchas. It'll grow naturally as you hit the same issues twice. Our gotchas section started with 3 entries. It's at 15 now, and every single one exists because we made the same mistake more than once.</p>
+        </div>
       </section>
 
       <!-- Section 3 -->
       <section id="agents">
         <h2><span class="section-num">3</span>Agent-Per-Domain</h2>
-        <p>Content coming soon.</p>
+
+        <p>Claude Code lets you define specialized agents that run as subagents within your main conversation. We've learned the hard way that one generalist agent doesn't scale. Domain expertise gets diluted when a single agent tries to be a backend architect, a UX designer, and a competitive analyst in the same breath. The fix is straightforward: one agent per domain, each with its own expertise, memory, and focus.</p>
+
+        <h3>Our 14 Active Agents</h3>
+
+        <p>These aren't theoretical. They're agents we invoke regularly across our development workflow:</p>
+
+        <ul>
+          <li><strong>Engineering</strong>: <code>ui-engineer</code>, <code>backend-architect</code>, <code>supabase-specialist</code>, <code>ai-engineer</code></li>
+          <li><strong>Content &amp; Domain</strong>: <code>epic-storyteller</code>, <code>game-cartographer</code>, <code>dnd-game-master</code>, <code>technical-writer</code></li>
+          <li><strong>Product &amp; Business</strong>: <code>product-manager</code>, <code>competitive-intel-analyst</code>, <code>conversion-analyst</code>, <code>reality-check-agent</code></li>
+          <li><strong>Design</strong>: <code>ux-designer</code>, <code>trend-researcher</code></li>
+        </ul>
+
+        <h3>When to Create an Agent vs. Extend CLAUDE.md</h3>
+
+        <p>Not everything needs its own agent. Here's the decision framework we use:</p>
+
+        <ul>
+          <li><strong>Create an agent</strong> when a domain is recurring, needs specialized knowledge, benefits from its own persistent memory, or requires specific tools. Our <code>supabase-specialist</code> exists because database migrations have enough nuance (RLS policies, idempotent DDL, type generation) that a generalist gets it wrong regularly.</li>
+          <li><strong>Use CLAUDE.md</strong> for one-off rules, project-wide conventions, and things every agent should know. "Use conventional commits" belongs in CLAUDE.md. "How to design a migration that handles concurrent schema changes" belongs in an agent.</li>
+        </ul>
+
+        <h3>Agent Definition Structure</h3>
+
+        <p>Each agent is a markdown file in <code>.claude/agents/</code>. The structure is simple:</p>
+
+        <div class="code-header"><span>.claude/agents/backend-architect.md</span><button class="copy-btn">Copy</button></div>
+<pre><code>---
+name: backend-architect
+description: Use this agent for API design, database schema,
+  and server-side architecture decisions
+---
+
+You are an expert backend engineer specializing in
+Next.js API routes, PostgreSQL, and serverless architecture.
+
+## Your Expertise
+- API design and REST patterns
+- Database schema and migrations
+- Authentication and authorization
+- Performance optimization and caching
+
+## Key Conventions
+- All API routes validate input with Zod
+- Database migrations must be idempotent
+- Never bypass RLS policies
+
+## Agent Memory
+You have persistent memory at
+`.claude/agent-memory/backend-architect/`.
+Read your MEMORY.md before starting work.
+Write insights back after completing work.</code></pre>
+
+        <p>The frontmatter (<code>name</code> and <code>description</code>) tells Claude Code when to suggest this agent. The body gives the agent its persona, expertise boundaries, and a pointer to its persistent memory (more on that in section 4).</p>
+
+        <h3>The Dispatch Pattern</h3>
+
+        <p>In practice, dispatch happens naturally in conversation. You say "review this database migration" and Claude recognizes it should spawn the <code>backend-architect</code> subagent. Or you explicitly ask: "Use the supabase-specialist to check this RLS policy." Either way, the subagent runs with its own context, its own expertise framing, and its own memory. When it finishes, the result flows back to your main conversation.</p>
+
+        <p>This matters because the subagent doesn't carry the full conversation context. It gets a focused task with the right domain framing. A <code>ux-designer</code> reviewing a component doesn't need to know about your database migration strategy. A <code>backend-architect</code> designing an API doesn't need your CSS conventions. The narrower context means better output.</p>
+
+        <div class="callout failure">
+          <strong>We learned this the hard way.</strong>
+          <p>We started with one mega-agent that tried to do everything. It knew about database patterns, UI conventions, content strategy, analytics, and deployment. Output quality dropped because domain expertise was too diluted. The agent would mix concerns, applying backend patterns to frontend code or suggesting UI changes during infrastructure work. Splitting into 14 specialists was the fix. Each agent is dumber in isolation but dramatically better at its specific job.</p>
+        </div>
       </section>
 
       <!-- Section 4 -->
