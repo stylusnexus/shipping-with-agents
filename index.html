@@ -223,19 +223,290 @@ Write insights back after completing work.</code></pre>
       <!-- Section 4 -->
       <section id="memory">
         <h2><span class="section-num">4</span>Agent Memory</h2>
-        <p>Content coming soon.</p>
+
+        <p>Here's the problem agents have without memory: they're goldfish. Every conversation starts from zero. Your backend architect discovers that generated types files pick up stderr output, works around it, and then forgets that lesson forever. Next week, same agent, same mistake, same debugging session. Memory fixes this.</p>
+
+        <h3>Two-Tier Memory Hierarchy</h3>
+
+        <p>We use two layers of persistent memory, each with a different scope:</p>
+
+        <ul>
+          <li><strong>Project memory</strong> (<code>~/.claude/projects/.../memory/</code>) stores cross-cutting insights that apply to every agent and every conversation. User preferences ("always create feature branches, never commit to dev"), workflow decisions ("use squash merge for release-please"), GTM status, and architectural patterns that span domains. This is the shared brain.</li>
+          <li><strong>Agent memory</strong> (<code>.claude/agent-memory/&lt;agent-name&gt;/</code>) stores domain-specific knowledge each agent accumulates over time. The backend architect remembers database migration patterns. The UI engineer remembers component conventions. The storyteller remembers narrative quality standards. Each of our 14 agents has its own directory, checked into version control.</li>
+        </ul>
+
+        <p>The distinction matters. "We deploy on Render, not Vercel" belongs in project memory because every agent needs it. "RLS policies must use <code>auth.uid()</code> scoping" belongs in the Supabase specialist's agent memory because only that agent cares.</p>
+
+        <h3>Memory Directory Structure</h3>
+
+        <div class="file-tree">
+          <details open>
+            <summary>.claude/agent-memory/</summary>
+            <details>
+              <summary>backend-architect/</summary>
+              <div>MEMORY.md &nbsp;&nbsp;&nbsp;# Index (always loaded, &lt;200 lines)</div>
+              <div>patterns.md &nbsp;&nbsp;# Domain patterns discovered</div>
+              <div>issues.md &nbsp;&nbsp;&nbsp;&nbsp;# Known issues and solutions</div>
+            </details>
+            <details>
+              <summary>ui-engineer/</summary>
+              <div>MEMORY.md</div>
+            </details>
+            <details>
+              <summary>epic-storyteller/</summary>
+              <div>MEMORY.md</div>
+            </details>
+            <div>... (14 directories total)</div>
+          </details>
+        </div>
+
+        <h3>The Protocol</h3>
+
+        <p>Every agent follows the same memory lifecycle:</p>
+
+        <ul>
+          <li><strong>Before starting work</strong>: read your <code>MEMORY.md</code> to load prior context. This is the single most important step. Without it, the agent operates without the benefit of past experience.</li>
+          <li><strong>After completing work</strong>: write insights back to memory. If you discovered a pattern, hit a wall, or made a decision worth remembering, persist it.</li>
+        </ul>
+
+        <p>The key is knowing what to save and what to skip:</p>
+
+        <ul>
+          <li><strong>Save</strong>: domain patterns ("API routes use cookie auth, not Bearer tokens"), key decisions ("chose HNSW over IVFFlat for vector indexes"), recurring issues ("generated types file picks up stderr, check head AND tail"), validated approaches that worked.</li>
+          <li><strong>Don't save</strong>: session-specific context (file paths you read, intermediate debugging steps), information already captured in CLAUDE.md, general programming knowledge the model already has.</li>
+        </ul>
+
+        <h3>What a MEMORY.md Looks Like</h3>
+
+        <p>The index file is small, scannable, and links to detail files for anything that needs more than a line:</p>
+
+        <div class="code-header"><span>.claude/agent-memory/backend-architect/MEMORY.md</span><button class="copy-btn">Copy</button></div>
+<pre><code># Backend Architect - Memory
+
+## Key Insights
+- [Migration safety](./patterns.md) — Always use IF NOT EXISTS, test idempotency
+- [RLS patterns](./issues.md) — Service role bypass gap found on content table
+
+## Patterns
+- API routes use cookie auth via SSR, not Bearer tokens
+- Database views need type assertion workaround
+- Trial quota uses atomic UPDATE RETURNING, fail-secure on zero rows
+
+## Known Issues
+- Generated types file picks up stderr output, check head AND tail
+- Views not in generated types cause "excessively deep" errors
+- Migrations in src/lib/db/ are NOT applied to production</code></pre>
+
+        <div class="callout tip">
+          <strong>Keep MEMORY.md under 200 lines.</strong>
+          <p>It's loaded into context every time the agent starts. A 500-line memory file burns tokens on old insights while crowding out the actual task. Use topic files (<code>patterns.md</code>, <code>issues.md</code>) for details, and link to them from the index. One line per insight, with a link for depth.</p>
+        </div>
+
+        <p>Memory is what turns agents from stateless tools into teammates who learn. The backend architect who remembers that <code>jsonMode</code> only works with OpenAI doesn't need to rediscover it through a 30-minute debugging session. The UI engineer who remembers that <code>useSearchParams()</code> needs a Suspense boundary doesn't ship that bug again. Over time, each agent's memory becomes a curated knowledge base for its domain, built from real project experience rather than generic documentation.</p>
       </section>
 
       <!-- Section 5 -->
       <section id="hooks">
         <h2><span class="section-num">5</span>Hooks as Context Injection</h2>
-        <p>Content coming soon.</p>
+
+        <p>This is the thing nobody talks about. CLAUDE.md tells Claude what to know. Agents tell Claude who to be. But hooks tell Claude <em>when</em> to know it. They're the automated nervous system that fires the right context at the right moment, without you having to remember anything.</p>
+
+        <h3>Hook Event Types</h3>
+
+        <p>Claude Code supports several hook events. Here are the ones we actually use:</p>
+
+        <ul>
+          <li><strong>PreToolUse</strong>: fires before any tool runs (Read, Edit, Bash, Write). This is where you inject context. When Claude is about to read a database migration file, you can ensure it loads your migration safety guide first.</li>
+          <li><strong>PostToolUse</strong>: fires after a tool completes. This is where you validate. After an edit to an AI prompt file, you can check that safety patterns are followed.</li>
+          <li><strong>Stop</strong>: fires when the agent is about to stop and return a response. This is your last chance to enforce requirements, like making sure tests were run before declaring work complete.</li>
+          <li><strong>SubagentStart</strong>: fires when a subagent is spawned. Useful for injecting additional context into specialized agents at dispatch time.</li>
+          <li><strong>Notification</strong>: fires on system events like session start, idle timeout, and permission prompts. Less commonly used but valuable for session-level setup.</li>
+        </ul>
+
+        <h3>Hook Configuration</h3>
+
+        <p>Hooks live in your <code>settings.json</code>. Each hook specifies which tools trigger it (via a regex matcher) and what command to run:</p>
+
+        <div class="code-header"><span>.claude/settings.json (hooks section)</span><button class="copy-btn">Copy</button></div>
+<pre><code>{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [{
+          "type": "command",
+          "command": "bash .claude/hooks/domain-context-loader.sh"
+        }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{
+          "type": "command",
+          "command": "bash .claude/hooks/instrumentation-check.sh"
+        }]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{
+          "type": "command",
+          "command": "bash .claude/hooks/require-tests.sh"
+        }]
+      }
+    ]
+  }
+}</code></pre>
+
+        <h3>The Domain Context Loader</h3>
+
+        <p>This is our most powerful hook. It watches which files you're touching and automatically loads the relevant guidance document. No manual invocation, no forgetting, no wasted tokens loading AI safety docs when you're editing CSS:</p>
+
+        <div class="code-header"><span>.claude/hooks/domain-context-loader.sh</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/bin/bash
+# Injects relevant guidance when you touch domain-specific files
+INPUT=$(cat)
+FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // ""')
+
+[ -z "$FILE_PATH" ] && exit 0
+
+GUIDANCE=""
+case "$FILE_PATH" in
+  */api/*|*/routes/*)       GUIDANCE="api-patterns" ;;
+  */auth/*|*/middleware/*)   GUIDANCE="auth-security" ;;
+  */db/*|*/migrations/*)    GUIDANCE="database-patterns" ;;
+  */ai/*|*/prompts/*)       GUIDANCE="ai-safety" ;;
+  */components/ui/*)        GUIDANCE="design-system" ;;
+esac
+
+if [ -n "$GUIDANCE" ] && [ -f ".claude/guidances/${GUIDANCE}.md" ]; then
+  echo "Read .claude/guidances/${GUIDANCE}.md before making changes."
+fi</code></pre>
+
+        <p>The hook reads the tool input from stdin (JSON with the file path being accessed), pattern-matches it against your domain structure, and if there's a relevant guidance file, tells Claude to read it. The guidance loads just-in-time, exactly when it's needed.</p>
+
+        <h3>The Stop Guard</h3>
+
+        <p>The stop guard prevents Claude from declaring "done" without running tests when critical files were modified. This catches the "it compiles, ship it" failure mode:</p>
+
+        <div class="code-header"><span>.claude/hooks/require-tests.sh</span><button class="copy-btn">Copy</button></div>
+<pre><code>#!/bin/bash
+# Block stopping if critical files changed without test verification
+INPUT=$(cat)
+
+# Check if tests were run in this session
+if git diff --name-only HEAD 2>/dev/null | grep -qE '\.(ts|tsx)$'; then
+  # TypeScript files changed — verify build passes
+  if ! echo "$INPUT" | jq -r '.transcript[]?.message // ""' | grep -q "npm run build"; then
+    echo "CRITICAL: TypeScript files were modified. Run npm run build before completing."
+    exit 1
+  fi
+fi
+
+exit 0</code></pre>
+
+        <p>When the hook exits with a non-zero code, Claude receives the error message and must address it before stopping. This turns "you should run the build" from a suggestion into a requirement.</p>
+
+        <h3>Before and After</h3>
+
+        <div class="diff-container">
+          <div class="diff-before">
+            <strong>Without hooks</strong>
+            <ul>
+              <li>Manually remembering to check compliance docs before editing AI prompts</li>
+              <li>Forgetting to run the build after TypeScript changes</li>
+              <li>Loading context by hand ("read the database patterns guide first")</li>
+              <li>Inconsistent quality depending on what the developer remembers to ask for</li>
+            </ul>
+          </div>
+          <div class="diff-after">
+            <strong>With hooks</strong>
+            <ul>
+              <li>Context auto-loads when you touch relevant files</li>
+              <li>Build verification required before stopping</li>
+              <li>Compliance and safety checks run on every write</li>
+              <li>Consistent quality regardless of what the developer remembers</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout">
+          <strong>Hooks are the difference between "Claude should know this" and "Claude always knows this."</strong>
+          <p>They turn tribal knowledge into automated guardrails. Every gotcha in your CLAUDE.md started as something someone forgot. Hooks make sure the next person (or the next agent) doesn't forget it either. We have 8 hooks in production, and they prevent more bugs than any single test suite.</p>
+        </div>
       </section>
 
       <!-- Section 6 -->
       <section id="skills">
         <h2><span class="section-num">6</span>Skills Composition</h2>
-        <p>Content coming soon.</p>
+
+        <p>Skills are reusable workflows that Claude executes as slash commands. They're markdown files that define a process, and Claude follows them. But the real power isn't individual skills. It's how they compose into chains that enforce an entire development lifecycle.</p>
+
+        <h3>Two Types of Skills</h3>
+
+        <p>We've learned to distinguish between skills that should be rigid and skills that should flex:</p>
+
+        <ul>
+          <li><strong>Rigid skills</strong> (TDD, debugging, verification): these enforce discipline. The TDD skill says "write the test first, watch it fail, then implement." You don't adapt away from that. You don't skip the failing test step because you're confident. The rigidity is the point. These skills exist precisely because developers (and agents) will take shortcuts without them.</li>
+          <li><strong>Flexible skills</strong> (brainstorming, architecture, code review): these adapt principles to context. The brainstorming skill explores intent and proposes approaches, but it doesn't prescribe a fixed number of questions or a rigid template. It reads the room. Different problems need different exploration depths.</li>
+        </ul>
+
+        <h3>Brainstorming First, Always</h3>
+
+        <p>Every creative task (new features, new components, new behavior) runs through the brainstorming skill before implementation. This prevents the number one failure mode we see with AI coding: jumping straight to code.</p>
+
+        <p>Without brainstorming, Claude sees "add a feedback system" and immediately starts writing a React component. With brainstorming, it first asks what kind of feedback, who sees it, what the data model looks like, how it interacts with existing systems, and whether there are edge cases worth designing for upfront. The code that comes after brainstorming is dramatically better because the thinking happened first.</p>
+
+        <h3>Skill Chaining</h3>
+
+        <p>Individual skills are useful. Chained skills are transformative. Here's the chain we run for every significant feature:</p>
+
+        <div class="code-header"><span>Feature development chain</span><button class="copy-btn">Copy</button></div>
+<pre><code>brainstorming → writing-plans → executing-plans → verification → review-merge-pipeline
+   think           plan           build            verify          ship</code></pre>
+
+        <p>Each skill hands off to the next. Brainstorming produces a design. Writing-plans turns that design into an implementation plan with ordered steps. Executing-plans works through the plan with review checkpoints. Verification confirms the work actually works (not just compiles). Review-merge-pipeline does code review, fixes issues, commits, creates a PR, and merges.</p>
+
+        <p>The chain enforces: think, plan, build, verify, ship. You can't skip straight to build without thinking. You can't ship without verifying. The discipline is encoded in the workflow, not left to willpower.</p>
+
+        <h3>Custom Project-Specific Skills</h3>
+
+        <p>Beyond the general development skills, we've built several that are specific to our workflow:</p>
+
+        <ul>
+          <li><strong><code>experiment-driven-dev</code></strong>: runs AI content generation N times, measures quality metrics, suggests prompt improvements, and tracks trends over time. Essential when your product generates AI content and "it works" isn't good enough.</li>
+          <li><strong><code>spec-workflow</code></strong>: structured specification development with approval gates. Specs go through drafting, review, and approval before implementation starts. Prevents building the wrong thing.</li>
+          <li><strong><code>deploy</code></strong>: merges dev to main with a squash commit formatted for release-please automation. One command, consistent deploys, proper changelogs.</li>
+          <li><strong><code>orient</code></strong>: rebuilds working context after <code>/clear</code>. When you compact or clear your conversation, this skill re-loads the project state, current branch, recent changes, and open issues so you don't start cold.</li>
+        </ul>
+
+        <h3>Skill Definition Structure</h3>
+
+        <p>A skill is a markdown file that defines when to use it, what process to follow, and what the output should be. Here's a simplified example:</p>
+
+        <div class="code-header"><span>.claude/skills/brainstorming.md</span><button class="copy-btn">Copy</button></div>
+<pre><code># Brainstorming
+
+Help turn ideas into fully formed designs through collaborative dialogue.
+
+## When to Use
+Before any creative work: features, components, new behavior.
+
+## Process
+1. Explore project context — read relevant code, understand current state
+2. Ask clarifying questions (one at a time, not a wall of questions)
+3. Propose 2-3 approaches with trade-offs
+4. Present design, get approval
+5. Write spec document
+6. Hand off to writing-plans skill</code></pre>
+
+        <p>The "When to Use" section is important. It tells Claude (and developers) when this skill applies, which helps with discoverability. When someone types "I want to add a notification system," Claude can recognize that brainstorming should run first.</p>
+
+        <div class="callout tip">
+          <strong>You don't need 20 skills to start.</strong>
+          <p>Install brainstorming + TDD + verification. Those three alone will change how you work. Brainstorming prevents building the wrong thing. TDD prevents building it wrong. Verification prevents shipping it broken. Everything else is optimization on top of that foundation.</p>
+        </div>
       </section>
 
       <!-- Section 7 -->
