@@ -512,37 +512,316 @@ Before any creative work: features, components, new behavior.
       <!-- Section 7 -->
       <section id="orchestration">
         <h2><span class="section-num">7</span>Multi-Agent Orchestration</h2>
-        <p>Content coming soon.</p>
+
+        <p>Individual agents are useful. Multiple agents working together are transformative. Once you've got specialized agents that each do their job well, the next question is: how do you coordinate them? The answer isn't a framework. It's a set of dispatch patterns that match how work actually flows.</p>
+
+        <h3>Parallel Dispatch</h3>
+
+        <p>Some tasks are naturally independent. When we needed to evaluate a new feature's impact, we asked our UI engineer and marketing agent the same question at the same time: "How should we present the new campaign knowledge graph to users?" Both worked independently, the UI engineer focused on component architecture and interaction patterns, the marketing agent focused on positioning and user-facing copy. We synthesized their recommendations into a single plan that was better than either would've produced alone.</p>
+
+        <p>The pattern is straightforward: identify tasks with no shared state or sequential dependencies, dispatch agents in parallel, then merge the results. You don't need a message bus or an orchestration layer. You need to recognize when two questions can be answered independently.</p>
+
+        <div class="code-header"><span>Parallel dispatch pattern</span><button class="copy-btn">Copy</button></div>
+<pre><code># Two independent tasks, dispatched simultaneously:
+
+Agent 1 (ui-engineer):    "Design the campaign graph sidebar component"
+Agent 2 (product-manager): "Define user stories for campaign graph discovery"
+
+# Both run in parallel — no shared state, no dependencies
+# Results merge in the main conversation when both complete</code></pre>
+
+        <h3>Foreground vs Background Agents</h3>
+
+        <p>Not every agent dispatch needs your immediate attention. We've learned to distinguish between two modes:</p>
+
+        <ul>
+          <li><strong>Foreground agents</strong>: you need the results before you can proceed. Research tasks, architecture analysis, design decisions. When you ask the backend architect to evaluate two schema approaches, you're blocked until the answer comes back. These run in the conversation flow and you wait for the output.</li>
+          <li><strong>Background agents</strong>: fire and forget, get notified when done. Code reviews, documentation audits, compliance checks. When you dispatch the security auditor to review a PR, you don't sit and watch. You keep working and check the results when they're ready.</li>
+        </ul>
+
+        <p>The distinction matters for workflow efficiency. If you treat every agent dispatch as foreground, you'll spend half your time waiting. If you treat everything as background, you'll miss critical decisions that need your input before proceeding.</p>
+
+        <h3>The Review-Merge Pipeline</h3>
+
+        <p>This is our most automated multi-step workflow. One command replaces six manual steps:</p>
+
+        <div class="code-header"><span>review-merge-pipeline</span><button class="copy-btn">Copy</button></div>
+<pre><code># What used to be 6 manual steps:
+1. Review uncommitted changes for issues
+2. Fix any issues found during review
+3. Commit with conventional commit message
+4. Push to remote
+5. Create pull request
+6. Merge with admin privileges
+
+# Now it's one command:
+/review-merge-pipeline</code></pre>
+
+        <p>The pipeline reviews your uncommitted changes, identifies issues (missing types, incomplete error handling, style violations), fixes them automatically, commits everything with a properly formatted conventional commit message, pushes to the remote, creates a PR, and merges it. The entire flow is encoded in a single skill that chains these steps with error handling at each gate. If the review finds something it can't auto-fix, it stops and asks you.</p>
+
+        <h3>Spec-Workflow: Structured Specification Development</h3>
+
+        <p>For larger features, we use a gated specification workflow that enforces discipline across the full lifecycle:</p>
+
+        <div class="code-header"><span>Spec-workflow phases</span><button class="copy-btn">Copy</button></div>
+<pre><code>Phase 1: Write spec         → Draft the specification document
+Phase 2: Get approval       → Review gate — spec must be approved before proceeding
+Phase 3: Write plan         → Break the approved spec into implementation steps
+Phase 4: Execute            → Build according to plan, with review checkpoints
+Phase 5: Verify             → Confirm implementation matches spec</code></pre>
+
+        <p>Each phase has an explicit gate. You can't start writing a plan until the spec is approved. You can't start building until the plan is reviewed. This prevents the most common failure mode in AI-assisted development: jumping straight to code before the problem is well-defined. The spec-workflow MCP server tracks status, approvals, and implementation logs so nothing falls through the cracks.</p>
+
+        <div class="callout tip">
+          <strong>Start with sequential agents.</strong>
+          <p>Parallel dispatch is powerful but harder to coordinate. Get comfortable with one agent at a time before launching three. Master the review-merge pipeline and spec-workflow first. Once those feel natural, you'll develop an intuition for which tasks can safely run in parallel and which need sequential gates.</p>
+        </div>
       </section>
 
       <!-- Section 8 -->
       <section id="experiments">
         <h2><span class="section-num">8</span>Experiment-Driven Dev</h2>
-        <p>Content coming soon.</p>
+
+        <p>When your product generates AI content, "it works" isn't good enough. The output might parse, it might look reasonable on a quick glance, but is it actually good? Is it consistently good? Does it degrade when you change models or tweak prompts? You can't answer these questions by reading a few samples. You need to measure.</p>
+
+        <h3>The Core Loop</h3>
+
+        <p>Every AI quality improvement we make follows the same cycle: <strong>measure, fix a targeted metric, re-measure</strong>. Not "try something and see if it feels better." Not "tweak the prompt and hope." Measure a specific metric, make a targeted change, measure again to confirm improvement. That's the whole process.</p>
+
+        <div class="code-header"><span>The experiment loop</span><button class="copy-btn">Copy</button></div>
+<pre><code># 1. Measure baseline
+Run generation 10 times → collect metrics
+  - Parse success rate: 8/10 (80%)
+  - Schema compliance: 7/10 (70%)
+  - Average quality score: 3.2/5
+
+# 2. Fix targeted metric (parse failures first)
+Identify root cause → JSON wrapping issue in prompt
+Add explicit schema to system prompt
+
+# 3. Re-measure
+Run generation 10 times → collect metrics
+  - Parse success rate: 10/10 (100%)  ← fixed
+  - Schema compliance: 7/10 (70%)     ← unchanged, tackle next
+  - Average quality score: 3.4/5      ← slight improvement</code></pre>
+
+        <h3>How It Works in Practice</h3>
+
+        <p>An experiment script runs your generation N times (we typically use 10 for quick checks, 25-50 for model comparisons), collects structured metrics, and produces a summary you can actually act on. There's no magic framework. It's a script that calls your generation endpoint, parses the output, checks it against your schema, scores it on whatever dimensions matter, and reports the results.</p>
+
+        <p>What we measure depends on the content type, but it generally falls into three categories:</p>
+
+        <ul>
+          <li><strong>Structural integrity</strong>: does the output parse? Does it conform to the expected schema? Are all required fields present? This is the baseline. If your JSON doesn't parse, nothing else matters.</li>
+          <li><strong>Content quality</strong>: does the output follow domain rules? Are the generated values within expected ranges? Does the structure match what the UI expects? This catches the subtler failures where the output is valid JSON but contains nonsensical or incomplete content.</li>
+          <li><strong>Model comparison</strong>: how does GPT-4o perform vs Claude for this specific content type? Not in general benchmarks, but for your exact use case with your exact prompts. The answer is often surprising.</li>
+        </ul>
+
+        <h3>How Results Feed Back Into Development</h3>
+
+        <p>Here's a real example. We were generating structured skill challenges using Haiku (Anthropic's fast model). It seemed to work in manual testing. When we ran experiments, the data told a different story: 60% JSON parse failure rate. Six out of ten generations produced output that couldn't be parsed. We switched to GPT-4o Mini, re-ran the experiment, and got 100% parse success. The fix was also 21x cheaper per call and faster. Without the experiment, we'd still be shipping a feature with a 60% failure rate and blaming "AI flakiness."</p>
+
+        <p>That's the feedback loop: experiment reveals a problem, data points to the cause, you make a targeted fix, experiment confirms the fix worked. No guessing, no "this prompt feels better," no shipping on vibes.</p>
+
+        <div class="code-header"><span>Real experiment output (simplified)</span><button class="copy-btn">Copy</button></div>
+<pre><code>Model Comparison: Skill Challenge Generation (n=10 per model)
+
+| Metric              | Haiku 4.5  | GPT-4o Mini |
+|---------------------|------------|-------------|
+| Parse success       | 4/10 (40%) | 10/10 (100%)|
+| Schema compliance   | 3/10 (30%) | 10/10 (100%)|
+| Avg latency         | 2.8s       | 1.9s        |
+| Cost per generation | $0.021     | $0.001      |
+
+Decision: Switch to GPT-4o Mini for all skill challenges.
+Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
+
+        <div class="callout failure">
+          <strong>We learned this the expensive way.</strong>
+          <p>We skipped experiments early on and guessed at prompt improvements. When we finally measured, we found we were wrong about 40% of the time. A prompt change that "felt better" in manual testing actually degraded schema compliance. A model we assumed was superior for a task was slower, more expensive, and less reliable than the cheaper alternative. Now we measure everything. The 10 minutes an experiment takes saves hours of debugging production failures.</p>
+        </div>
+
+        <div class="callout tip">
+          <strong>You don't need a framework.</strong>
+          <p>A bash script that runs your generation 10 times and counts failures is enough to start. Seriously. Call your endpoint in a loop, try to parse each response, count successes and failures. That alone will tell you more about your AI output quality than any amount of manual testing. Fancy metrics come later. Start by counting what breaks.</p>
+        </div>
       </section>
 
       <!-- Section 9 -->
       <section id="full-stack">
         <h2><span class="section-num">9</span>The Full Stack</h2>
-        <p>Content coming soon.</p>
+
+        <p>We've walked through each layer individually. Now let's see how they compose. The whole point of this architecture is that the layers aren't independent features you bolt on. They're a stack, and each layer amplifies the ones below it.</p>
+
+        <div class="code-header"><span>The Agent Infrastructure Stack</span><button class="copy-btn">Copy</button></div>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│  Layer 8: Experiments         Quality feedback loop                │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
+│  Layer 7: MCP Servers         External tool integrations           │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
+│  Layer 6: Skills              Workflow discipline (20+ active)     │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
+│  Layer 5: Hooks               Automated context injection (8)      │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
+│  Layer 4: Agent Memory        Persistent learning across sessions  │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
+│  Layer 3: Agents              Specialized roles (14 active)        │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
+│  Layer 2: Guidances           On-demand domain knowledge (18)      │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
+│  Layer 1: CLAUDE.md           Base configuration, project rules    │
+└─────────────────────────────────────────────────────────────────────┘</code></pre>
+
+        <p>Here's what matters: <strong>these layers compound multiplicatively, not additively</strong>. CLAUDE.md alone is good. It gives every conversation a baseline. Add guidances, and Claude loads domain knowledge on demand instead of burning tokens on everything at once. Add hooks, and that domain knowledge loads automatically instead of requiring you to remember. Add agents, and each domain gets a specialist instead of a generalist. Add memory, and those specialists learn instead of starting fresh. Add skills, and your workflow gets discipline instead of ad-hoc prompting. Add experiments, and you're measuring quality instead of guessing.</p>
+
+        <p>Each layer solves a different problem:</p>
+
+        <ul>
+          <li><strong>CLAUDE.md</strong> solves "Claude doesn't know our project rules"</li>
+          <li><strong>Guidances</strong> solve "CLAUDE.md is too big and wastes tokens"</li>
+          <li><strong>Agents</strong> solve "one generalist can't master every domain"</li>
+          <li><strong>Memory</strong> solves "agents forget what they learned yesterday"</li>
+          <li><strong>Hooks</strong> solve "we keep forgetting to load the right context"</li>
+          <li><strong>Skills</strong> solve "we skip steps when we're in a hurry"</li>
+          <li><strong>MCP Servers</strong> solve "Claude can't reach external tools"</li>
+          <li><strong>Experiments</strong> solve "we don't know if our changes actually improved things"</li>
+        </ul>
+
+        <p>You don't need all eight layers on day one. But understand that they're designed to stack. When you hit the ceiling of one layer, the next one is waiting.</p>
+
+        <div class="callout">
+          <strong>These patterns are product-agnostic.</strong>
+          <p>We use them for CritForge (a D&amp;D 5e SaaS), but there's nothing D&amp;D-specific about the architecture. CLAUDE.md, guidances, hooks, agents, memory, skills, experiments. They work for any project with enough complexity to benefit from structured context. That's the point.</p>
+        </div>
       </section>
 
       <!-- Section 10 -->
       <section id="results">
         <h2><span class="section-num">10</span>What This Enabled</h2>
-        <p>Content coming soon.</p>
+
+        <p>We're not claiming this stack is magic. We're claiming it's measurably better than the alternative. Here's what it actually enabled, with specifics:</p>
+
+        <ul>
+          <li><strong>19 content generators shipped and maintained simultaneously.</strong> Each generator has its own prompt engineering, Zod schemas, compliance rules, and quality benchmarks. Without agents and guidances, keeping that many generators consistent would require a team three times our size.</li>
+          <li><strong>Compliance automation.</strong> Domain-specific rules (SRD 5.2 legal compliance, AI safety sanitization, authentication patterns) are enforced by hooks on every file edit. Not by manual review. Not by hoping someone remembers. Automatically, every time.</li>
+          <li><strong>Agent-assisted iteration.</strong> Experiment-driven development caught quality regressions that manual testing missed. When we changed a prompt and thought it was better, experiments showed our intuition was wrong 40% of the time. We measure now.</li>
+          <li><strong>Context persistence.</strong> Agent memory prevents re-learning the same lessons across sessions. The backend architect doesn't rediscover that <code>jsonMode</code> only works with OpenAI. The UI engineer doesn't re-debug the <code>useSearchParams</code> Suspense boundary issue. Knowledge sticks.</li>
+          <li><strong>Instant onboarding.</strong> New conversation sessions start productive immediately. Session-start hooks load project context, CLAUDE.md provides rules and gotchas, and agent memory provides domain history. There's no "let me re-explain the project" warmup period.</li>
+        </ul>
+
+        <h3>Before and After</h3>
+
+        <div class="diff-container">
+          <div class="diff-before">
+            <strong>Before the stack</strong>
+            <ul>
+              <li>Start each session re-explaining the project</li>
+              <li>Manually check compliance on every AI-related edit</li>
+              <li>Guess at prompt quality based on a few manual tests</li>
+              <li>Forget what worked last week and rediscover it</li>
+              <li>Hope the developer remembers to load the right docs</li>
+            </ul>
+          </div>
+          <div class="diff-after">
+            <strong>After the stack</strong>
+            <ul>
+              <li>Session starts with full context loaded automatically</li>
+              <li>Compliance checked by hooks on every file write</li>
+              <li>Quality measured with experiments (10+ generations, real metrics)</li>
+              <li>Insights persist in agent memory across sessions</li>
+              <li>Hooks load the right guidance for the right files, every time</li>
+            </ul>
+          </div>
+        </div>
+
+        <p>The compound effect is the important part. Any one of these improvements is nice. All of them together changed how fast and how confidently we ship. The stack doesn't just help us write code faster. It helps us write <em>correct</em> code faster, which is the part that actually matters.</p>
       </section>
 
       <!-- Section 11 -->
       <section id="failures">
         <h2><span class="section-num">11</span>What Didn't Work</h2>
-        <p>Content coming soon.</p>
+
+        <p>We'd be doing you a disservice if we only shared what worked. Here are the failures that taught us the most. Each one is a pattern we tried, a reason it broke, and what replaced it.</p>
+
+        <div class="callout failure">
+          <strong>Failure 1: The Mega-Agent</strong>
+          <p>We started with one agent definition that tried to cover everything: frontend, backend, database, content, security, analytics. It knew a little about a lot. The result? Generic output that missed domain nuance consistently. It would apply backend patterns to frontend code, suggest UI changes during infrastructure work, and give surface-level advice on every domain instead of deep advice on any one. Splitting into 14 specialists, each with their own memory directory and expertise boundaries, was the fix. Each agent is narrower in isolation but dramatically better at its specific job.</p>
+        </div>
+
+        <div class="callout failure">
+          <strong>Failure 2: The Mega-CLAUDE.md</strong>
+          <p>We stuffed everything into CLAUDE.md. Every rule, every pattern, every gotcha, every domain-specific convention. It felt thorough. Within weeks, we were hitting context limits. Claude was burning thousands of tokens loading AI safety docs when someone was editing CSS. The file was so long that important rules got buried in the middle where models pay less attention. Moving domain knowledge to on-demand guidances (loaded by hooks only when relevant files are touched) solved the problem. CLAUDE.md stayed lean. Token usage dropped. The right context loads at the right time.</p>
+        </div>
+
+        <div class="callout failure">
+          <strong>Failure 3: Ephemeral Knowledge</strong>
+          <p>We relied on conversation context for domain insights. An agent would discover that generated types files pick up stderr output, work around it, and then that knowledge would vanish when the conversation ended. Next week, same agent, same discovery, same 30-minute debugging session. We tried putting everything in CLAUDE.md (see Failure 2), but that didn't scale either. Building the agent memory protocol (read MEMORY.md before starting, write insights back after completing work) made knowledge persistent without bloating the global context. Each agent learns once and remembers forever.</p>
+        </div>
+
+        <div class="callout failure">
+          <strong>Failure 4: Gut-Feel Prompting</strong>
+          <p>We tweaked prompts based on vibes and hoped they'd improve. "This feels better" was the quality bar. When we started running experiments (10 generations per variant, structured evaluation criteria, statistical comparison), we found our intuition was wrong 40% of the time. Changes we thought improved quality sometimes made it worse. Changes we thought were neutral sometimes delivered significant improvements. Now we measure everything. Prompt changes don't ship without experiment results. The experiment framework wasn't the first thing we built, but in hindsight, it should've been closer to the top.</p>
+        </div>
+
+        <div class="callout warning">
+          <strong>The meta-lesson.</strong>
+          <p>Every failure above has the same root cause: trying to keep things simple by centralizing. One agent, one file, one conversation, one gut feel. The fix in every case was the same: decompose, specialize, and measure. It's more infrastructure upfront, but it scales where the simple approach doesn't.</p>
+        </div>
       </section>
 
       <!-- Section 12 -->
       <section id="getting-started">
         <h2><span class="section-num">12</span>Getting Started</h2>
-        <p>Content coming soon.</p>
+
+        <p>You don't need to adopt this entire stack at once. That's a recipe for overengineering before you've felt the pain each layer solves. Here's the incremental path we'd recommend, one layer per week:</p>
+
+        <h3>Week 1: Write a Solid CLAUDE.md</h3>
+
+        <p>This is the highest-impact, lowest-effort starting point. A good CLAUDE.md makes every single conversation better. Include:</p>
+
+        <ul>
+          <li><strong>Project overview</strong>: what the app does, tech stack, two paragraphs max</li>
+          <li><strong>Dev commands</strong>: how to build, test, lint, and run locally</li>
+          <li><strong>3-5 critical rules</strong>: security requirements, compliance rules, things where getting it wrong is an incident</li>
+          <li><strong>3-5 common gotchas</strong>: bugs that have bitten you twice. Each one saves a future debugging session</li>
+        </ul>
+
+        <p>That's it. Don't overthink it. This alone will make Claude noticeably more useful because it stops guessing at your project conventions.</p>
+
+        <h3>Week 2: Create 2-3 Guidances</h3>
+
+        <p>Pick your most complex domains. For most projects, that's authentication, database patterns, and whatever your core business logic is. Move the deep knowledge out of CLAUDE.md and into <code>.claude/guidances/</code>. Each guidance should be self-contained: when it applies, what patterns to follow, what mistakes to avoid.</p>
+
+        <p>You'll feel the benefit immediately. CLAUDE.md gets shorter and more scannable. Domain knowledge lives closer to where it's needed.</p>
+
+        <h3>Week 3: Define Your First Agent</h3>
+
+        <p>Pick the domain you work in most. If you're a full-stack developer who spends 60% of your time on the backend, start with a backend architect agent. Give it specialized instructions, point it at relevant guidances, and create a memory directory for it. One agent, well-defined, is better than five vague ones.</p>
+
+        <h3>Week 4: Set Up One Hook</h3>
+
+        <p>Start with the domain context loader (PreToolUse). It's the easiest to implement and has the highest impact. When Claude touches a file in your auth directory, the auth guidance loads automatically. When it touches your database code, the migration patterns load. No manual remembering required.</p>
+
+        <p>This is the moment the system starts feeling less like a collection of files and more like an intelligent assistant that knows what you need before you ask.</p>
+
+        <h3>Week 5+: Add Skills and Iterate</h3>
+
+        <p>Install brainstorming, TDD, and verification. Those three skills alone enforce the discipline loop of think, build, verify. Then build custom skills for your specific workflows. A deploy skill. A spec workflow. An experiment runner if you're doing AI work. Let the system grow organically from the problems you actually hit.</p>
+
+        <p>The key is to let each layer earn its place. Don't build agent memory until your agents are forgetting things. Don't build experiments until you're guessing at quality. Each layer should solve a pain you've already felt.</p>
+
+        <div class="callout tip">
+          <strong>Get a working .claude/ directory in 5 minutes.</strong>
+          <p>Fork our starter template to get a pre-configured CLAUDE.md, example guidances, a hook setup, and an agent definition you can customize: <a href="https://github.com/stylusnexus/agent-starter">github.com/stylusnexus/agent-starter</a></p>
+        </div>
+
+        <div style="margin-top: 2.5rem; padding: 2rem; border-radius: 8px; background: var(--bg-secondary, #1a1a2e); text-align: center;">
+          <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">These patterns power <a href="https://www.getcritforge.com">CritForge</a>, our D&amp;D 5e GM intelligence tool. They'll work for your project too.</p>
+          <p>
+            <a href="https://github.com/stylusnexus/shipping-with-agents" style="margin-right: 1.5rem;">Star this guide on GitHub</a>
+            <a href="https://github.com/stylusnexus">Follow Stylus Nexus</a>
+          </p>
+        </div>
       </section>
 
       <!-- Footer -->
