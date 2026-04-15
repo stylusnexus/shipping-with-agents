@@ -790,6 +790,24 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
           <p>We'd recommend context7 or GitHub as your first MCP connection. Both are universally useful regardless of your stack. Add more as you notice agents repeatedly needing access to the same external system. The full list of available servers is at <a href="https://modelcontextprotocol.io">modelcontextprotocol.io</a>.</p>
         </div>
 
+        <h3>Plugins: Packaged Skills and Integrations</h3>
+
+        <p>Beyond MCP servers, every major AI coding tool now has a plugin system that bundles skills, agents, hooks, and integrations into installable packages. The ecosystem has matured rapidly:</p>
+
+        <ul>
+          <li><strong>Claude Code</strong>: plugins bundle skills, hooks, and MCP configs. Install with <code>claude install-plugin &lt;url&gt;</code>. Community registries host plugins like <a href="https://github.com/anthropics/claude-code-superpowers">Superpowers</a> (workflow skills), <a href="https://github.com/anthropics/claude-code-hookify">Hookify</a> (automated guardrails), and <a href="https://github.com/anthropics/claude-code-pr-review-toolkit">PR Review Toolkit</a> (code review agents).</li>
+          <li><strong>Cursor</strong>: <a href="https://cursor.com/marketplace">marketplace</a> launched Feb 2026 with 30+ plugins from Figma, Stripe, AWS, Linear, Datadog, GitLab, and more. Install via <code>/add-plugin</code> in the editor. Plugins can include MCP servers, skills, subagents, hooks, and rules.</li>
+          <li><strong>Codex</strong>: <a href="https://developers.openai.com/codex/plugins">plugin directory</a> in the app and CLI. Bundles skills, MCP servers, and app integrations. Supports workspace-scoped and home-scoped installs.</li>
+          <li><strong>MCP registries</strong>: <a href="https://mcpmarket.com">MCPMarket</a> (10,000+ servers), <a href="https://mcp.so">mcp.so</a> (20,000+ servers), and <a href="https://mcpservers.org">mcpservers.org</a>. MCP servers work across all tools that support the protocol &mdash; install once, use everywhere.</li>
+        </ul>
+
+        <p>The practical split: <strong>MCP servers are the portable layer</strong> (same server works in Claude Code, Cursor, Codex, Windsurf, and Copilot). <strong>Plugins are tool-specific</strong> (a Claude Code plugin doesn't install in Cursor, and vice versa). When choosing, prefer MCP servers for integrations you want cross-tool, and tool-specific plugins for workflow features that are tightly coupled to your editor.</p>
+
+        <div class="callout adapter">
+          <strong>Installing across tools</strong>
+          <p><strong>Claude Code</strong>: <code>claude install-plugin &lt;github-url&gt;</code> or <code>claude mcp add &lt;server&gt;</code>. <strong>Cursor</strong>: browse <a href="https://cursor.com/marketplace">cursor.com/marketplace</a> or <code>/add-plugin</code>. <strong>Codex</strong>: plugin directory in app, or <code>~/.codex/plugins/</code> for manual install. <strong>MCP servers (any tool)</strong>: add to your tool's MCP config file &mdash; the server name, command, and args are the same regardless of which tool runs them. Browse servers at <a href="https://mcpmarket.com">mcpmarket.com</a>.</p>
+        </div>
+
         <div class="callout">
           <strong>These patterns are product-agnostic.</strong>
           <p>We use these patterns for our production SaaS, but there's nothing domain-specific about the architecture. CLAUDE.md, guidances, hooks, agents, memory, skills, experiments. They work for any project with enough complexity to benefit from structured context. That's the point.</p>
