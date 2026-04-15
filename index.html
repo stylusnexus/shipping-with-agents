@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shipping with Agents: Advanced Claude Code Patterns from a Production Team</title>
-  <meta name="description" content="How a production SaaS team ships with 14 specialized agents, 20+ workflow skills, automated hooks, and per-agent memory systems. Real patterns from building CritForge." />
+  <meta name="description" content="How a production SaaS team ships with 14 specialized agents, 20+ workflow skills, automated hooks, and per-agent memory systems. Real patterns, not beginner tips." />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -66,7 +66,7 @@
 
         <p>There's no shortage of "50 Claude Code tips" posts. They're genuinely useful if you're getting started. But they tend to stop at the surface: write a good CLAUDE.md, use slash commands, try agents. That's the tutorial. This guide is about what comes after the tutorial.</p>
 
-        <p>We've been shipping a production SaaS (CritForge, a Next.js 14+ app with AI-powered content generation) with Claude Code as our primary development tool for months. Not as an experiment. Not as a side project. As our daily workflow across 14 specialized agents, 20+ workflow skills, 8 automated hooks, and 18 domain guidance files. Along the way, we've learned things that don't show up in beginner guides because you can't learn them until you've hit the walls yourself.</p>
+        <p>We've been shipping a production SaaS (a Next.js 14+ app with AI-powered content generation) with Claude Code as our primary development tool for months. Not as an experiment. Not as a side project. As our daily workflow across 14 specialized agents, 20+ workflow skills, 8 automated hooks, and 18 domain guidance files. Along the way, we've learned things that don't show up in beginner guides because you can't learn them until you've hit the walls yourself.</p>
 
         <p>Here are three things you won't learn until you've shipped with agents for a while: <strong>context compounds</strong> (a CLAUDE.md with 15 well-earned gotchas prevents more bugs than one with 3 generic rules), <strong>agents need memory</strong> (without persistent memory, your agents rediscover the same domain knowledge every conversation), and <strong>hooks prevent more bugs than tests</strong> (automated context injection at the right moment catches classes of mistakes that test suites only find after the fact).</p>
 
@@ -112,7 +112,7 @@
             <div>rendering-assets.md</div>
             <div>service-layer-patterns.md</div>
             <div>slm-architecture.md</div>
-            <div>srd-compliance.md</div>
+            <div>compliance-rules.md</div>
             <div>supabase-auth-patterns.md</div>
             <div>testing-strategy.md</div>
             <div>ux-design-patterns.md</div>
@@ -535,15 +535,15 @@ Before any creative work: features, components, new behavior.
 
         <h3>Parallel Dispatch</h3>
 
-        <p>Some tasks are naturally independent. When we needed to evaluate a new feature's impact, we asked our UI engineer and marketing agent the same question at the same time: "How should we present the new campaign knowledge graph to users?" Both worked independently. The UI engineer focused on component architecture and interaction patterns. The marketing agent focused on positioning and user-facing copy. We synthesized their recommendations into a single plan that was better than either would've produced alone.</p>
+        <p>Some tasks are naturally independent. When we needed to evaluate a new feature's impact, we asked our UI engineer and marketing agent the same question at the same time: "How should we present this new feature to users?" Both worked independently. The UI engineer focused on component architecture and interaction patterns. The marketing agent focused on positioning and user-facing copy. We synthesized their recommendations into a single plan that was better than either would've produced alone.</p>
 
         <p>The pattern is straightforward: identify tasks with no shared state or sequential dependencies, dispatch agents in parallel, then merge the results. You don't need a message bus or an orchestration layer. You need to recognize when two questions can be answered independently.</p>
 
         <div class="code-header"><span>Parallel dispatch pattern</span><button class="copy-btn">Copy</button></div>
 <pre><code># Two independent tasks, dispatched simultaneously:
 
-Agent 1 (ui-engineer):    "Design the campaign graph sidebar component"
-Agent 2 (product-manager): "Define user stories for campaign graph discovery"
+Agent 1 (ui-engineer):    "Design the feature sidebar component"
+Agent 2 (product-manager): "Define user stories for feature discovery"
 
 # Both run in parallel — no shared state, no dependencies
 # Results merge in the main conversation when both complete</code></pre>
@@ -709,7 +709,7 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
 
         <div class="callout">
           <strong>These patterns are product-agnostic.</strong>
-          <p>We use them for CritForge (a D&amp;D 5e SaaS), but there's nothing D&amp;D-specific about the architecture. CLAUDE.md, guidances, hooks, agents, memory, skills, experiments. They work for any project with enough complexity to benefit from structured context. That's the point.</p>
+          <p>We use these patterns for our production SaaS, but there's nothing domain-specific about the architecture. CLAUDE.md, guidances, hooks, agents, memory, skills, experiments. They work for any project with enough complexity to benefit from structured context. That's the point.</p>
         </div>
       </section>
 
@@ -721,7 +721,7 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
 
         <ul>
           <li><strong>19 content generators shipped and maintained simultaneously.</strong> Each generator has its own prompt engineering, Zod schemas, compliance rules, and quality benchmarks. Without agents and guidances, keeping that many generators consistent would require a team three times our size.</li>
-          <li><strong>Compliance automation.</strong> Domain-specific rules (SRD 5.2 legal compliance, AI safety sanitization, authentication patterns) are enforced by hooks on every file edit. Not by manual review. Not by hoping someone remembers. Automatically, every time.</li>
+          <li><strong>Compliance automation.</strong> Domain-specific rules (legal compliance, AI safety sanitization, authentication patterns) are enforced by hooks on every file edit. Not by manual review. Not by hoping someone remembers. Automatically, every time.</li>
           <li><strong>Agent-assisted iteration.</strong> Experiment-driven development caught quality regressions that manual testing missed. When we changed a prompt and thought it was better, experiments showed our intuition was wrong 40% of the time. We measure now.</li>
           <li><strong>Context persistence.</strong> Agent memory prevents re-learning the same lessons across sessions. The backend architect doesn't rediscover that <code>jsonMode</code> only works with OpenAI. The UI engineer doesn't re-debug the <code>useSearchParams</code> Suspense boundary issue. Knowledge sticks.</li>
           <li><strong>Instant onboarding.</strong> New conversation sessions start productive immediately. Session-start hooks load project context, CLAUDE.md provides rules and gotchas, and agent memory provides domain history. There's no "let me re-explain the project" warmup period.</li>
@@ -834,7 +834,7 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
         </div>
 
         <div style="margin-top: 2.5rem; padding: 2rem; border-radius: 8px; background: var(--bg-secondary, #1a1a2e); text-align: center;">
-          <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">These patterns power <a href="https://www.getcritforge.com">CritForge</a>, our D&amp;D 5e GM intelligence tool. They'll work for your project too.</p>
+          <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">These patterns power our production SaaS. They'll work for your project too.</p>
           <p>
             <a href="https://github.com/stylusnexus/shipping-with-agents" style="margin-right: 1.5rem;">Star this guide on GitHub</a>
             <a href="https://github.com/stylusnexus">Follow Stylus Nexus</a>
@@ -844,7 +844,7 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
 
       <!-- Footer -->
       <footer class="site-footer">
-        <p>Built by <a href="https://github.com/stylusnexus">Stylus Nexus</a>, the team behind <a href="https://www.getcritforge.com">CritForge</a>.</p>
+        <p>Built by <a href="https://github.com/stylusnexus">Stylus Nexus</a>.</p>
         <p style="margin-top: 0.5rem;">Licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</p>
       </footer>
 
