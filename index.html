@@ -481,7 +481,7 @@ exit 0</code></pre>
         <p>Individual skills are useful. Chained skills are transformative. Here's the chain we run for every significant feature:</p>
 
         <div class="code-header"><span>Feature development chain</span><button class="copy-btn">Copy</button></div>
-<pre><code>brainstorming → writing-plans → executing-plans → verification → review-merge-pipeline
+<pre><code>brainstorm → write-plan → execute-plan → verify → review-and-ship
    think           plan           build            verify          ship</code></pre>
 
         <p>Each skill hands off to the next. Brainstorming produces a design. Writing-plans turns that design into an implementation plan with ordered steps. Executing-plans works through the plan with review checkpoints. Verification confirms the work actually works (not just compiles). Review-merge-pipeline does code review, fixes issues, commits, creates a PR, and merges.</p>
@@ -493,8 +493,8 @@ exit 0</code></pre>
         <p>Beyond the general development skills, we've built several that are specific to our workflow:</p>
 
         <ul>
-          <li><strong><code>experiment-driven-dev</code></strong>: runs AI content generation N times, measures quality metrics, suggests prompt improvements, and tracks trends over time. Essential when your product generates AI content and "it works" isn't good enough.</li>
-          <li><strong><code>spec-workflow</code></strong>: structured specification development with approval gates. Specs go through drafting, review, and approval before implementation starts. Prevents building the wrong thing.</li>
+          <li><strong><code>experiment</code></strong>: runs AI content generation N times, measures quality metrics, suggests prompt improvements, and tracks trends over time. Essential when your product generates AI content and "it works" isn't good enough.</li>
+          <li><strong>Structured specs</strong>: we write specs before implementation on anything non-trivial. Specs go through drafting, review, and approval before a plan gets written. The brainstorm and write-plan skills handle this naturally. Prevents building the wrong thing.</li>
           <li><strong><code>deploy</code></strong>: merges dev to main with a squash commit formatted for release-please automation. One command, consistent deploys, proper changelogs.</li>
           <li><strong><code>orient</code></strong>: rebuilds working context after <code>/clear</code>. When you compact or clear your conversation, this skill re-loads the project state, current branch, recent changes, and open issues so you don't start cold.</li>
         </ul>
@@ -503,7 +503,7 @@ exit 0</code></pre>
 
         <p>A skill is a markdown file that defines when to use it, what process to follow, and what the output should be. Here's a simplified example:</p>
 
-        <div class="code-header"><span>.claude/skills/brainstorming.md</span><button class="copy-btn">Copy</button></div>
+        <div class="code-header"><span>.claude/skills/brainstorm.md</span><button class="copy-btn">Copy</button></div>
 <pre><code># Brainstorming
 
 Help turn ideas into fully formed designs through collaborative dialogue.
@@ -517,13 +517,13 @@ Before any creative work: features, components, new behavior.
 3. Propose 2-3 approaches with trade-offs
 4. Present design, get approval
 5. Write spec document
-6. Hand off to writing-plans skill</code></pre>
+6. Hand off to write-plan skill</code></pre>
 
         <p>The "When to Use" section is important. It tells Claude (and developers) when this skill applies, which helps with discoverability. When someone types "I want to add a notification system," Claude can recognize that brainstorming should run first.</p>
 
         <div class="callout tip">
-          <strong>You don't need 20 skills to start.</strong>
-          <p>Install brainstorming + TDD + verification. Those three alone will change how you work. Brainstorming prevents building the wrong thing. TDD prevents building it wrong. Verification prevents shipping it broken. Everything else is optimization on top of that foundation.</p>
+          <strong>The starter template ships with 10 skills.</strong>
+          <p>Our <a href="https://github.com/stylusnexus/agent-starter">agent-starter</a> includes: brainstorm, TDD, verify, write-plan, execute-plan, orient, debug, review-and-ship, activity-summary, and experiment. Together they cover the full workflow: think, plan, build, test, debug, verify, measure, ship. Start with brainstorm + TDD + verify (those three alone will change how you work), then adopt the rest as you need them.</p>
         </div>
       </section>
 
@@ -563,7 +563,7 @@ Agent 2 (product-manager): "Define user stories for feature discovery"
 
         <p>This is our most automated multi-step workflow. One command replaces six manual steps:</p>
 
-        <div class="code-header"><span>review-merge-pipeline</span><button class="copy-btn">Copy</button></div>
+        <div class="code-header"><span>review-and-ship</span><button class="copy-btn">Copy</button></div>
 <pre><code># What used to be 6 manual steps:
 1. Review uncommitted changes for issues
 2. Fix any issues found during review
@@ -573,7 +573,7 @@ Agent 2 (product-manager): "Define user stories for feature discovery"
 6. Merge with admin privileges
 
 # Now it's one command:
-/review-merge-pipeline</code></pre>
+/review-and-ship</code></pre>
 
         <p>The pipeline reviews your uncommitted changes, identifies issues (missing types, incomplete error handling, style violations), fixes them automatically, commits everything with a properly formatted conventional commit message, pushes to the remote, creates a PR, and merges it. The entire flow is encoded in a single skill that chains these steps with error handling at each gate. If the review finds something it can't auto-fix, it stops and asks you.</p>
 
@@ -588,11 +588,11 @@ Phase 3: Write plan         → Break the approved spec into implementation step
 Phase 4: Execute            → Build according to plan, with review checkpoints
 Phase 5: Verify             → Confirm implementation matches spec</code></pre>
 
-        <p>Each phase has an explicit gate. You can't start writing a plan until the spec is approved. You can't start building until the plan is reviewed. This prevents the most common failure mode in AI-assisted development: jumping straight to code before the problem is well-defined. The spec-workflow MCP server tracks status, approvals, and implementation logs so nothing falls through the cracks.</p>
+        <p>Each phase has an explicit gate. You can't start writing a plan until the spec is approved. You can't start building until the plan is reviewed. This prevents the most common failure mode in AI-assisted development: jumping straight to code before the problem is well-defined. The structured specs MCP server tracks status, approvals, and implementation logs so nothing falls through the cracks.</p>
 
         <div class="callout tip">
           <strong>Start with sequential agents.</strong>
-          <p>Parallel dispatch is powerful but harder to coordinate. Get comfortable with one agent at a time before launching three. Master the review-merge pipeline and spec-workflow first. Once those feel natural, you'll develop an intuition for which tasks can safely run in parallel and which need sequential gates.</p>
+          <p>Parallel dispatch is powerful but harder to coordinate. Get comfortable with one agent at a time before launching three. Master the review-merge pipeline and structured specs first. Once those feel natural, you'll develop an intuition for which tasks can safely run in parallel and which need sequential gates.</p>
         </div>
       </section>
 
@@ -830,7 +830,7 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
 
         <div class="callout tip">
           <strong>Get a working .claude/ directory in 5 minutes.</strong>
-          <p>Fork our starter template to get a pre-configured CLAUDE.md, example guidances, a hook setup, and an agent definition you can customize: <a href="https://github.com/stylusnexus/agent-starter">github.com/stylusnexus/agent-starter</a>. Already have a project? The template includes a <a href="https://github.com/stylusnexus/agent-starter/blob/main/SETUP.md">setup runbook</a> that walks Claude through scanning your codebase and generating everything automatically.</p>
+          <p>Fork our starter template to get a pre-configured CLAUDE.md, 3 example guidances, an agent definition, 10 workflow skills, 2 hooks, and settings wiring: <a href="https://github.com/stylusnexus/agent-starter">github.com/stylusnexus/agent-starter</a>. Already have a project? The template includes a <a href="https://github.com/stylusnexus/agent-starter/blob/main/SETUP.md">setup runbook</a> that walks Claude through scanning your codebase and generating everything automatically.</p>
         </div>
 
         <div style="margin-top: 2.5rem; padding: 2rem; border-radius: 8px; background: var(--bg-secondary, #1a1a2e); text-align: center;">
