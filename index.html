@@ -44,15 +44,16 @@
           <li><a href="#hooks">5. Hooks as Context Injection</a></li>
           <li><a href="#skills">6. Skills Composition</a></li>
           <li><a href="#orchestration">7. Multi-Agent Orchestration</a></li>
-          <li><a href="#experiments">8. Experiment-Driven Dev</a></li>
-          <li><a href="#full-stack">9. The Full Stack</a></li>
-          <li><a href="#results">10. What This Enabled</a></li>
-          <li><a href="#failures">11. What Didn't Work</a></li>
-          <li><a href="#getting-started">12. Getting Started</a></li>
+          <li><a href="#session-economics">8. Session Economics</a></li>
+          <li><a href="#experiments">9. Experiment-Driven Dev</a></li>
+          <li><a href="#full-stack">10. The Full Stack</a></li>
+          <li><a href="#results">11. What This Enabled</a></li>
+          <li><a href="#failures">12. What Didn't Work</a></li>
+          <li><a href="#getting-started">13. Getting Started</a></li>
         </ul>
       </nav>
 
-      <div class="sidebar-progress">Section 1 of 12</div>
+      <div class="sidebar-progress">Section 1 of 13</div>
     </aside>
 
     <!-- ─── Main Content ───────────────────────────────────────────────────────── -->
@@ -685,8 +686,90 @@ Agent 2 (product-manager): "Define user stories for feature discovery"
       </section>
 
       <!-- Section 8 -->
+      <section id="session-economics">
+        <h2><span class="section-num">8</span>Session Economics</h2>
+
+        <p>You can have the cleanest CLAUDE.md, the sharpest agent definitions, and the most automated hooks, and still burn through your weekly limit on Tuesday. The reason is rarely your patterns. It's session economics. Once you're orchestrating multiple agents, running long sessions, and chaining skills, the cost of a single inefficient turn compounds quickly. A few discipline moves keep the cache warm, the context tight, and the bill predictable.</p>
+
+        <h3>The Prompt Cache Is Your Cheapest Win</h3>
+
+        <p>Anthropic's prompt cache charges 0.1&times; the input price on a hit, and 1&times; plus a 1.25&times; write on a miss. On a healthy long session with steady tool use, the cached prefix stays warm indefinitely; every hit refreshes the TTL at no extra cost. On a careless session, you blow the cache on every turn and pay full price each time.</p>
+
+        <p>Two things invalidate the cached prefix:</p>
+
+        <ul>
+          <li><strong>Adding or removing tools mid-session.</strong> Connecting an MCP server in the middle of a conversation forces a full re-read of the system prompt. Connect what you need at session start.</li>
+          <li><strong>Switching models mid-session.</strong> A <code>/model opus</code> &rarr; <code>/model sonnet</code> swap blows the cache the same way. Pick the session model at start; if the work is mixed, run Opus on the parent and delegate mechanical work to Sonnet or Haiku subagents.</li>
+        </ul>
+
+        <p>Healthy cache hit rate sits around 90% on the 5-minute default TTL. Under 80% means something is invalidating your prefix. Two community tools surface the number: <a href="https://github.com/phuryn/claude-usage">phuryn/claude-usage</a> for long-term breakdown by session, day, and week, and <a href="https://github.com/Gronsten/claude-usage-monitor">Gronsten/claude-usage-monitor</a> for the current 5-hour window with color thresholds. If you can't see the hit rate, you can't fix it.</p>
+
+        <h3>The Five Session Moves</h3>
+
+        <p>When context is getting heavy, these are the options, ordered from "least carries forward" to "most":</p>
+
+        <div class="code-header"><span>Session moves</span><button class="copy-btn">Copy</button></div>
+<pre><code>Fresh session (/clear)      just your next prompt
+Compact (/compact)          lossy summary of the session so far
+Subagent (Agent tool)       just the task brief + the agent's result
+Rewind (/rewind, Esc-Esc)   conversation up to the chosen turn, bad turn cut
+Continue                    everything (default)</code></pre>
+
+        <p>Most teams default to "continue" until the auto-compact fires, by which point context has already drifted and pushed past the trigger. The cheaper habit is to <code>/compact</code> proactively at 50% or after every completed task, <code>/clear</code> between unrelated pieces of work, and <code>/rewind</code> when a turn went sideways instead of trying to re-prompt around the bad context.</p>
+
+        <h3>Subagents Are the Underused Move</h3>
+
+        <p>Anything bulk-mechanical, anything scoped to research, anything parallelizable should run in a subagent. The parent context stays clean and you parallelize across cheaper models. We covered the dispatch patterns in <a href="#orchestration">section 7</a>; the economics piece is choosing the cheapest agent that can do the subtask well:</p>
+
+        <ul>
+          <li><strong>Haiku</strong>: bulk mechanical work, no judgment (file renames, CSV parsing, log scans).</li>
+          <li><strong>Sonnet</strong>: scoped research, code or file exploration, in-scope synthesis.</li>
+          <li><strong>Opus</strong>: rare. Usually keep judgment in the parent.</li>
+        </ul>
+
+        <p>If a subagent realizes the task needs more reasoning than its tier provides, it should return to the parent rather than burning tokens trying. Pack the strategic <em>why</em> into the brief, not just the task. A subagent that knows "we're choosing between A and B" can flag a third option, or surface that the question itself is wrong. A subagent told only "research A and B" can't.</p>
+
+        <h3>The /effort Dial</h3>
+
+        <p>Effort is per-prompt, not per-session. The default for Opus 4.7 agentic coding is <code>xhigh</code>, but most prompts don't need that headroom. <code>medium</code> burns roughly half the tokens with quality that's barely distinguishable on simple work.</p>
+
+        <div class="code-header"><span>/effort levels</span><button class="copy-btn">Copy</button></div>
+<pre><code>/effort low      quick fixes, mechanical tasks
+/effort medium   most prompts (huge savings vs default)
+/effort high     demanding reasoning
+/effort xhigh    default for agentic coding on Opus 4.7
+/effort max      diminishing returns; rarely worth the ~2x cost</code></pre>
+
+        <p>Per Anthropic's published evaluation, <code>medium</code> and <code>xhigh</code> are the two settings that pay for themselves. <code>low</code> is for genuinely simple work; <code>max</code> is situational. Set effort on the prompt that needs the headroom, not the whole session.</p>
+
+        <h3>Disable 1M Context When You Don't Need It</h3>
+
+        <p>Opus 4.7 defaults to a 1M context window. That's expensive and rarely necessary. 200K is enough for almost any task. Disable 1M and pin the auto-compact threshold at 80% so the "compact before you hit the trigger" trick actually works:</p>
+
+        <div class="code-header"><span>.claude/settings.json</span><button class="copy-btn">Copy</button></div>
+<pre><code>{
+  "env": {
+    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80"
+  }
+}</code></pre>
+
+        <p>1M context is genuinely useful when you're working across a large repo and need to keep the whole structure in mind, or when you're synthesizing a long-running thread. Re-enable it for those sessions. Default to 200K otherwise.</p>
+
+        <div class="callout adapter">
+          <strong>Adapter notes</strong>
+          <p>The cache and effort levers are Claude Code-specific, but the underlying disciplines apply across tools. <strong>Cursor</strong>: keep your <code>.cursorrules</code> stable across a session; agent-mode swaps invalidate context the same way. <strong>Copilot</strong>: turn off unused MCP servers and extensions before a long pairing session. <strong>Codex</strong>: <code>codex resume</code> warm-starts from a saved transcript; treat each fresh <code>codex</code> as a session boundary. The universal rule: lock your harness at session start, batch your context loading, and prefer subagents (or new sessions) over piling more into a long-running conversation.</p>
+        </div>
+
+        <div class="callout tip">
+          <strong>Watch the number for two weeks.</strong>
+          <p>The fastest way to internalize this is to install one of the usage monitors and watch your numbers for a couple of weeks. Once you can see when your cache hit rate drops or when a session balloons, the discipline becomes muscle memory. The patterns are useless if you're flying blind.</p>
+        </div>
+      </section>
+
+      <!-- Section 9 -->
       <section id="experiments">
-        <h2><span class="section-num">8</span>Experiment-Driven Dev</h2>
+        <h2><span class="section-num">9</span>Experiment-Driven Dev</h2>
 
         <p>When your product generates AI content, "it works" isn't good enough. The output might parse, it might look reasonable on a quick glance, but is it actually good? Is it consistently good? Does it degrade when you change models or tweak prompts? You can't answer these questions by reading a few samples. You need to measure.</p>
 
@@ -753,9 +836,9 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
         </div>
       </section>
 
-      <!-- Section 9 -->
+      <!-- Section 10 -->
       <section id="full-stack">
-        <h2><span class="section-num">9</span>The Full Stack</h2>
+        <h2><span class="section-num">10</span>The Full Stack</h2>
 
         <p>We've covered each layer on its own. Now let's see how they compose. The whole point is that these aren't independent features you bolt on. They're a stack, and each layer amplifies the ones below it.</p>
 
@@ -842,9 +925,9 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
         </div>
       </section>
 
-      <!-- Section 10 -->
+      <!-- Section 11 -->
       <section id="results">
-        <h2><span class="section-num">10</span>What This Enabled</h2>
+        <h2><span class="section-num">11</span>What This Enabled</h2>
 
         <p>We're not claiming this stack is magic. We're claiming it's measurably better than the alternative. Here's what it actually enabled, with specifics:</p>
 
@@ -884,9 +967,9 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
         <p>The compound effect is the important part. Any one of these improvements is nice. All of them together changed how fast and how confidently we ship. The stack doesn't just help us write code faster. It helps us write <em>correct</em> code faster, which is the part that actually matters.</p>
       </section>
 
-      <!-- Section 11 -->
+      <!-- Section 12 -->
       <section id="failures">
-        <h2><span class="section-num">11</span>What Didn't Work</h2>
+        <h2><span class="section-num">12</span>What Didn't Work</h2>
 
         <p>It wouldn't be honest to only share what worked. Here are the failures that taught us the most. Each one is a pattern we tried, a reason it broke, and what replaced it.</p>
 
@@ -916,9 +999,9 @@ Re-run after switch: 10/10 parse, 10/10 schema. Confirmed.</code></pre>
         </div>
       </section>
 
-      <!-- Section 12 -->
+      <!-- Section 13 -->
       <section id="getting-started">
-        <h2><span class="section-num">12</span>Getting Started</h2>
+        <h2><span class="section-num">13</span>Getting Started</h2>
 
         <p>You don't need to adopt this entire stack at once. That's a recipe for overengineering before you've felt the pain each layer solves. Here's the incremental path we'd recommend, one layer per week:</p>
 
